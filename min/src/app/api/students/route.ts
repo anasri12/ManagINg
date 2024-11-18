@@ -1,9 +1,8 @@
+import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { createConnection } from "../../../lib/db.js";
 
 export async function GET() {
   try {
-    const db = await createConnection();
     const sql = "SELECT * FROM student";
     if (db != null) {
       const [students] = await db.query(sql);
@@ -25,7 +24,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid data" }, { status: 400 });
     }
     NextResponse.json({ message: "Invalid data" }, { status: 400 });
-    const db = await createConnection();
 
     const sql = `INSERT INTO student (student_ID, first_name, last_name, dept_code) VALUES (?, ?, ?, ?)`;
     if (db != null) {

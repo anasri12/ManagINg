@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useSession, signOut } from "next-auth/react";
 import {
   Sheet,
   SheetContent,
@@ -17,17 +18,10 @@ import {
 
 import Link from "next/link";
 import Image from "next/image";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
 
 export default function Home() {
+  const { data: session } = useSession();
+
   return (
     <div>
       <div className="flex gap-36 pt-3">
@@ -60,32 +54,58 @@ export default function Home() {
           </NavigationMenuList>
         </NavigationMenu>
       </div>
-      <Sheet>
-        <SheetTrigger>
-          <div className="absolute top-3 right-36 h-16 w-16">
-            <div className="flex gap-2">
-              <Image
-                src="/profile.png"
-                width={500}
-                height={500}
-                alt="Picture of the user"
-                className="rounded-full w-14 h-14"
-              />
-              <div className="mt-2 flex-row">
-                <div className="w-36 justify-start flex">Iron Man</div>
-                <div className="w-36 justify-start flex text-gray-500 text-sm">
-                  Personal
+      {session && session.user?.name ? (
+        <Sheet>
+          <SheetTrigger>
+            <div
+              className="absolute top-3 right-36 h-16 w-16"
+              style={{
+                right: `${Math.min(session.user?.name.length * 15 || 0)}px`, // Move the entire div right based on name length
+              }}
+            >
+              <div className="flex gap-2">
+                <Image
+                  src={session.user?.image || "/profile.png"} // Use session image
+                  width={500}
+                  height={500}
+                  alt="Picture of the user"
+                  className="rounded-full w-14 h-14"
+                />
+                <div className="mt-2 flex-row">
+                  <div className="w-36 justify-start flex">
+                    {session.user?.name || "User"} {/* User name */}
+                  </div>
+                  <div className="w-36 justify-start flex text-gray-500 text-sm">
+                    Personal
+                  </div>
                 </div>
               </div>
             </div>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Profile</SheetTitle>
+              <button
+                onClick={() => signOut()} // Sign Out Button
+                className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
+              >
+                Sign Out
+              </button>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <div className="mb-5">
+          <div className="absolute top-5 right-20 flex gap-4">
+            <button className="px-4 py-2">
+              <Link href={"/signIn"}>Log In</Link>
+            </button>
+            <button className="px-4 py-2 bg-red-500 text-white rounded">
+              <Link href={"/signUp"}>Sign Up</Link>
+            </button>
           </div>
-        </SheetTrigger>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Profile</SheetTitle>
-          </SheetHeader>
-        </SheetContent>
-      </Sheet>
+        </div>
+      )}
       <div className="w-auto h-px bg-black border-0 dark:bg-gray-700 mx-12"></div>
       <div className="flex justify-center mt-10 font-serif font-thin text-8xl">
         <div className="flex flex-col justify-center gap-10">
