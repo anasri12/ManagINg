@@ -155,10 +155,10 @@ const NavBar: React.FC<NavProps> = ({ role }) => {
       ) : (
         <div className="absolute top-5 right-20 flex gap-1">
           <button className="px-4 py-2">
-            <Link href={"/signIn"}>Login</Link>
+            <Link href={"/signin"}>Login</Link>
           </button>
           <button className="px-1 bg-[#A91A1A] text-white rounded-lg">
-            <Link href={"/signUp"}>Sign-up</Link>
+            <Link href={"/signup"}>Sign-up</Link>
           </button>
         </div>
       )}
