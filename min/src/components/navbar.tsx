@@ -14,6 +14,7 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
+  navigationMenuTriggerStyle,
 } from "./ui/navigation-menu";
 
 // Define role types
@@ -24,9 +25,6 @@ interface NavProps {
   role: Role;
 }
 
-// Utility for dynamic navigation link styling
-const navigationMenuTriggerStyle = () => "some-class-styles";
-
 const NavBar: React.FC<NavProps> = ({ role }) => {
   const { data: session } = useSession();
 
@@ -35,66 +33,92 @@ const NavBar: React.FC<NavProps> = ({ role }) => {
       case "dev":
         return (
           <>
-            <NavigationMenuItem>
-              <Link href="/devTools" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Dev Tools
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link href="/bugReports" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Bug Reports
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
+            <NavigationMenu className="pt-2 pl-12">
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <Link href="/devTools" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      Dev Tools
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link href="/bugReports" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      Bug Reports
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
           </>
         );
       case "admin":
         return (
           <>
-            <NavigationMenuItem>
-              <Link href="/userManagement" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  User Management
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link href="/settings" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Admin Settings
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
+            <NavigationMenu className="pt-2 pl-12">
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <Link href="/userManagement" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      User Management
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link href="/settings" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      Admin Settings
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
           </>
         );
       case "user":
       default:
         return (
           <>
-            <NavigationMenuItem>
-              <Link href="/newInventory" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  New / Create Inventory
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link href="/myInventory" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  My Inventory
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link href="/inbox" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Inbox
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
+            <NavigationMenu className="pt-2 pl-12">
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <Link href="/newInventory" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      New / Create Inventory
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link href="/myInventory" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      My Inventory
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link href="/inbox" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      Inbox
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
           </>
         );
     }
@@ -102,15 +126,11 @@ const NavBar: React.FC<NavProps> = ({ role }) => {
 
   return (
     <div className="flex flex-col">
-      <div className="flex gap-44 pt-3 mb-5">
+      <div className="flex gap-40 pt-3 mb-5">
         <div className="font-inria font-normal text-5xl pl-11 [text-shadow:_0_2px_4px_rgb(0_0_0_/_0.3)]">
           <Link href={"/home"}>ManagINg</Link>
         </div>
-        <NavigationMenu className="pt-2 pl-12">
-          <NavigationMenuList className="gap-10">
-            {renderLinks()}
-          </NavigationMenuList>
-        </NavigationMenu>
+        {renderLinks()}
       </div>
       {session && session.user?.name ? (
         <Sheet>
