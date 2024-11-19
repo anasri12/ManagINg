@@ -1,6 +1,6 @@
-// app/profile/page.tsx
 "use client";
 
+import { Loading } from "@/components/loading";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -10,7 +10,7 @@ export default function ProfilePage() {
   const router = useRouter();
 
   if (status === "loading") {
-    return <div>Loading...</div>; // Loading state while session is being fetched
+    return <Loading></Loading>; // Loading state while session is being fetched
   }
 
   if (!session) {
