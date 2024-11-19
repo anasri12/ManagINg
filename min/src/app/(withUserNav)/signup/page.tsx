@@ -28,7 +28,7 @@ export default function SignupPage() {
 
     if (response.ok) {
       // Redirect to the login page after successful signup
-      router.push("/signIn");
+      router.push("/signin");
     } else {
       setError(data.error || "Failed to create account");
     }
