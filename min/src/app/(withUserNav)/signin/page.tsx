@@ -40,7 +40,7 @@ export default function SignInPage() {
       className="h-screen overflow-hidden flex flex-col" // Full height, no scroll, flex layout
     >
       <NavBar role="user"></NavBar>
-      <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded shadow-lg">
+      <div className="max-w-md mx-auto mt-32 p-6 bg-white rounded shadow-lg">
         <h1 className="text-3xl font-semibold text-center mb-6">Sign In</h1>
 
         {/* Login form */}
@@ -57,7 +57,7 @@ export default function SignInPage() {
               type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-700"
               required
             />
           </div>
@@ -74,7 +74,7 @@ export default function SignInPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-700"
               required
             />
           </div>
@@ -84,7 +84,7 @@ export default function SignInPage() {
 
           <button
             type="submit"
-            className={`w-full mt-4 py-2 px-4 text-white bg-blue-500 rounded-md hover:bg-blue-600 ${
+            className={`w-full mt-4 py-2 px-4 text-white bg-red-500 rounded-md hover:bg-red-700 ${
               isLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
             disabled={isLoading}
@@ -96,7 +96,7 @@ export default function SignInPage() {
         {/* Link to signup page */}
         <p className="mt-4 text-center text-sm">
           Don&apos;t have an account?{" "}
-          <a href="/signUp" className="text-blue-500 hover:underline">
+          <a href="/signUp" className="text-red-500 hover:underline">
             Sign up
           </a>
         </p>

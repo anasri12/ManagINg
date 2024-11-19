@@ -41,7 +41,7 @@ export default function SignupPage() {
       className="h-screen overflow-hidden flex flex-col" // Full height, no scroll, flex layout
     >
       <NavBar role="user"></NavBar>
-      <div className="mt-8 flex items-center justify-center">
+      <div className="mt-20 flex items-center justify-center">
         <form
           onSubmit={handleSubmit}
           className="p-6 border rounded-md shadow-md max-w-md w-full"
