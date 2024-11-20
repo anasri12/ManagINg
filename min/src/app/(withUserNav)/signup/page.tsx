@@ -7,6 +7,7 @@ export default function SignupPage() {
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [cpassword, setCPassword] = useState<string>(""); // Stores confirm password
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function SignupPage() {
 
     const response = await fetch("/api/users", {
       method: "POST",
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ username, email, password, cpassword }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -41,7 +42,7 @@ export default function SignupPage() {
       className="h-screen overflow-hidden flex flex-col" // Full height, no scroll, flex layout
     >
       <NavBar role="user"></NavBar>
-      <div className="mt-8 flex items-center justify-center">
+      <div className="mt-32 flex items-center justify-center ">
         <form
           onSubmit={handleSubmit}
           className="p-6 border rounded-md shadow-md max-w-md w-full"
@@ -54,7 +55,7 @@ export default function SignupPage() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-700"
               required
             />
           </div>
@@ -64,7 +65,7 @@ export default function SignupPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-700"
               required
             />
           </div>
@@ -74,14 +75,29 @@ export default function SignupPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-700"
               required
             />
           </div>
+
+          <div className="mb-4">
+            <label htmlFor="password" className="block text-gray-700">
+              Confirm Password
+            </label>
+            <input
+              id="cpassword"
+              type="cpassword"
+              value={cpassword}
+              onChange={(e) => setCPassword(e.target.value)}
+              className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-700"
+              required
+            />
+          </div>
+
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white p-2 rounded-md"
+            className="w-full mt-4 py-2 px-4 text-white bg-red-600 rounded-md hover:bg-red-700 "
           >
             {isSubmitting ? "Signing Up..." : "Sign Up"}
           </button>
