@@ -10,14 +10,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface studentType {
-  student_ID: string;
-  first_name: string;
-  last_name: string;
-  dept_code: string;
-}
-export default function Students() {
-  const [students, setStudents] = useState([]); // State to store student data
+type UserType = {
+  ID: string;
+  Username: string;
+  Email: string;
+  Password_Hash: string;
+  Profile_Picture_URL: string;
+  CreatedAt: string;
+  UpdatedAt: string;
+  Role: string;
+};
+
+export default function Users() {
+  const [users, setUsers] = useState([]); // State to store student data
   const [loading, setLoading] = useState(true); // State for loading status
   const [error, setError] = useState<null | string>(null); // State for error
 
@@ -25,12 +30,12 @@ export default function Students() {
     // Fetch data from the API when the component mounts
     const fetchData = async () => {
       try {
-        const response = await fetch("/api/students"); // Fetch from the API
+        const response = await fetch("/api/users"); // Fetch from the API
         if (!response.ok) {
           throw new Error(`Error: ${response.statusText}`);
         }
         const data = await response.json(); // Parse JSON data
-        setStudents(data); // Set the fetched data to state
+        setUsers(data); // Set the fetched data to state
         setLoading(false); // Set loading to false
       } catch (error) {
         // Narrow the type of error
@@ -58,25 +63,29 @@ export default function Students() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Student ID</TableHead>
-            <TableHead>First Name</TableHead>
-            <TableHead>Last Name</TableHead>
-            <TableHead>Dept Code</TableHead>
+            <TableHead>ID</TableHead>
+            <TableHead>Username</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Password</TableHead>
+            <TableHead>Profile_Picture_URL</TableHead>
+            <TableHead>Role</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {students.map((student: studentType) => (
-            <TableRow key={student.student_ID}>
-              <TableCell>{student.student_ID}</TableCell>
-              <TableCell>{student.first_name}</TableCell>
-              <TableCell>{student.last_name}</TableCell>
-              <TableCell>{student.dept_code}</TableCell>
+          {users.map((user: UserType) => (
+            <TableRow key={user.ID}>
+              <TableCell>{user.ID}</TableCell>
+              <TableCell>{user.Username}</TableCell>
+              <TableCell>{user.Email}</TableCell>
+              <TableCell>{user.Password_Hash}</TableCell>
+              <TableCell>{user.Profile_Picture_URL ?? "-"}</TableCell>
+              <TableCell>{user.Role}</TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell>Total Students: {students.length}</TableCell>
+            <TableCell>Total Users: {users.length}</TableCell>
           </TableRow>
         </TableFooter>
       </Table>

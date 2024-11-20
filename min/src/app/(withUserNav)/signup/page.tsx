@@ -16,7 +16,7 @@ export default function SignupPage() {
     setError(null);
     setIsSubmitting(true);
 
-    const response = await fetch("/api/signup", {
+    const response = await fetch("/api/users", {
       method: "POST",
       body: JSON.stringify({ username, email, password }),
       headers: {
@@ -28,7 +28,7 @@ export default function SignupPage() {
 
     if (response.ok) {
       // Redirect to the login page after successful signup
-      router.push("/signIn");
+      router.push("/signin");
     } else {
       setError(data.error || "Failed to create account");
     }

@@ -96,7 +96,7 @@ export default function SignInPage() {
         {/* Link to signup page */}
         <p className="mt-4 text-center text-sm">
           Don&apos;t have an account?{" "}
-          <a href="/signUp" className="text-blue-500 hover:underline">
+          <a href="/signup" className="text-blue-500 hover:underline">
             Sign up
           </a>
         </p>
