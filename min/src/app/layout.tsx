@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Inria_Serif, Roboto } from "next/font/google";
 import SessionProviderWrapper from "./SessionProviderWrapper";
+import { EdgeStoreProvider } from "@/lib/edgestore";
 
 const inriaSerif = Inria_Serif({
   weight: ["300", "400", "700"],
@@ -28,7 +29,9 @@ export default function RootLayout({
       <body
         className={`${roboto.className} ${inriaSerif.variable} antialiased`}
       >
-        <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        <EdgeStoreProvider>
+          <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        </EdgeStoreProvider>
       </body>
     </html>
   );

@@ -17,7 +17,7 @@ export default function SignupPage() {
     setError(null);
     setIsSubmitting(true);
 
-    const response = await fetch("/api/signup", {
+    const response = await fetch("/api/users", {
       method: "POST",
       body: JSON.stringify({ username, email, password, cpassword }),
       headers: {
