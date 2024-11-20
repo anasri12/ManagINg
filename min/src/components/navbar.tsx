@@ -19,13 +19,14 @@ import {
 
 // Define role types
 type Role = "user" | "admin" | "dev";
-
+type Sign = "signin" | "signup";
 // Props for the Nav component
 interface NavProps {
   role: Role;
+  sign: Sign;
 }
 
-const NavBar: React.FC<NavProps> = ({ role }) => {
+const NavBar: React.FC<NavProps> = ({ role, sign }) => {
   const { data: session } = useSession();
 
   const renderLinks = () => {
@@ -36,20 +37,29 @@ const NavBar: React.FC<NavProps> = ({ role }) => {
             <NavigationMenu className="pt-2 pl-12">
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <Link href="/devTools" legacyBehavior passHref>
+                  <Link href="/APIUsage" legacyBehavior passHref>
                     <NavigationMenuLink
                       className={navigationMenuTriggerStyle()}
                     >
-                      Dev Tools
+                      API Uasge
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link href="/bugReports" legacyBehavior passHref>
+                  <Link href="/InboxDev" legacyBehavior passHref>
                     <NavigationMenuLink
                       className={navigationMenuTriggerStyle()}
                     >
-                      Bug Reports
+                      Inbox
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link href="/userMode" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      User Mode
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
@@ -63,20 +73,38 @@ const NavBar: React.FC<NavProps> = ({ role }) => {
             <NavigationMenu className="pt-2 pl-12">
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <Link href="/userManagement" legacyBehavior passHref>
+                  <Link href="/management" legacyBehavior passHref>
                     <NavigationMenuLink
                       className={navigationMenuTriggerStyle()}
                     >
-                      User Management
+                      Management
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link href="/settings" legacyBehavior passHref>
+                  <Link href="/logs" legacyBehavior passHref>
                     <NavigationMenuLink
                       className={navigationMenuTriggerStyle()}
                     >
-                      Admin Settings
+                      Logs
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link href="/InboxAdmin" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      Inbox
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link href="/userMode" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      User Mode
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
@@ -109,7 +137,7 @@ const NavBar: React.FC<NavProps> = ({ role }) => {
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link href="/inbox" legacyBehavior passHref>
+                  <Link href="/Inbox" legacyBehavior passHref>
                     <NavigationMenuLink
                       className={navigationMenuTriggerStyle()}
                     >
@@ -120,6 +148,34 @@ const NavBar: React.FC<NavProps> = ({ role }) => {
               </NavigationMenuList>
             </NavigationMenu>
           </>
+        );
+    }
+  };
+
+  const renderSign = () => {
+    switch (sign) {
+      case "signin":
+        return (
+          <div className="absolute top-5 right-20 flex gap-1">
+            <button className="px-1 py-2  bg-red-600 text-white rounded-lg">
+              <Link href={"/signin"}>Login</Link>
+            </button>
+            <button className="px-1">
+              <Link href={"/signup"}>Sign-up</Link>
+            </button>
+          </div>
+        );
+      case "signup":
+      default:
+        return (
+          <div className="absolute top-5 right-20 flex gap-1">
+            <button className="px-1 py-2">
+              <Link href={"/signin"}>Login</Link>
+            </button>
+            <button className="px-1  bg-red-600 text-white rounded-lg">
+              <Link href={"/signup"}>Sign-up</Link>
+            </button>
+          </div>
         );
     }
   };
@@ -173,14 +229,7 @@ const NavBar: React.FC<NavProps> = ({ role }) => {
           </SheetContent>
         </Sheet>
       ) : (
-        <div className="absolute top-5 right-20 flex gap-1">
-          <button className="px-4 py-2">
-            <Link href={"/signin"}>Login</Link>
-          </button>
-          <button className="px-1 bg-[#A91A1A] text-white rounded-lg">
-            <Link href={"/signup"}>Sign-up</Link>
-          </button>
-        </div>
+        renderSign()
       )}
       <div className="w-auto h-px bg-[#d4afaf] border-1 rounded-md mx-12"></div>
     </div>
