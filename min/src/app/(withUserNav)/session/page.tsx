@@ -10,7 +10,7 @@ export default function ProfilePage() {
   const router = useRouter();
 
   if (status === "loading") {
-    return <Loading></Loading>; // Loading state while session is being fetched
+    return <Loading />; // Loading state while session is being fetched
   }
 
   if (!session) {
