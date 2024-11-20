@@ -167,6 +167,7 @@ const NavBar: React.FC<NavProps> = ({ role }) => {
                 onClick={() => signOut()}
                 className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
               >
+                <Link href="/home"></Link>
                 Sign Out
               </button>
             </SheetHeader>

@@ -1,13 +1,13 @@
 import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
-import { db } from "@/lib/db"; // Adjust the path to your database connection
+import { db } from "@/lib/db";
 
 interface User {
   ID: string;
   Username: string;
   Email: string;
-  Profile_Picture_URL: string | null;
+  Profile_Picture_URL: string | undefined;
   Password_Hash: string;
   Role: string;
 }
@@ -20,7 +20,7 @@ declare module "next-auth" {
       name: string;
       email: string;
       image?: string;
-      role: string; // Include role
+      role: string;
     };
   }
 }
@@ -41,24 +41,24 @@ export const authOptions: AuthOptions = {
         const { identifier, password } = credentials;
 
         try {
-          // Query user by username or email
           const [rows] = await db.query(
             `SELECT * FROM User WHERE Username = ? OR Email = ? LIMIT 1`,
             [identifier, identifier]
           );
+
           const user = (rows as User[])[0];
           if (!user) throw new Error("Invalid username/email or password");
 
-          // Compare hashed password
           const isValid = await bcrypt.compare(password, user.Password_Hash);
           if (!isValid) throw new Error("Invalid username/email or password");
 
-          // Return user object with ID
+          // Return user details
           return {
             id: user.ID,
             name: user.Username,
             email: user.Email,
             image: user.Profile_Picture_URL,
+            role: user.Role,
           };
         } catch (error) {
           console.error("Error in credentials provider:", error);
@@ -69,7 +69,8 @@ export const authOptions: AuthOptions = {
   ],
   secret: process.env.NEXTAUTH_SECRET,
   session: {
-    strategy: "jwt", // Use JWT for session management
+    strategy: "jwt",
+    maxAge: 30 * 60, // 30 minutes
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -94,14 +95,27 @@ export const authOptions: AuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token?.id && token?.role) {
-        session.user = {
-          id: token.id as string,
-          name: session.user.name || "",
-          email: session.user.email || "",
-          image: session.user.image || undefined,
-          role: token.role as string, // Attach role to session
-        };
+      if (token?.id) {
+        try {
+          const [rows] = await db.query(
+            `SELECT ID, Username, Email, Profile_Picture_URL, Role FROM User WHERE ID = ? LIMIT 1`,
+            [token.id]
+          );
+
+          const dbUser = (rows as User[])[0];
+          if (dbUser) {
+            // Always fetch the latest data
+            session.user = {
+              id: dbUser.ID,
+              name: dbUser.Username,
+              email: dbUser.Email,
+              image: dbUser.Profile_Picture_URL,
+              role: dbUser.Role,
+            };
+          }
+        } catch (error) {
+          console.error("Error fetching session user data:", error);
+        }
       }
       return session;
     },
