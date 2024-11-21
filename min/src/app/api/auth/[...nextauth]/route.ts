@@ -1,18 +1,9 @@
 import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
-import { db } from "@/lib/db";
+import { queryDatabase } from "@/app/utils/db";
+import { UserInterface, UserSchema } from "../../../zods/user";
 
-interface User {
-  ID: string;
-  Username: string;
-  Email: string;
-  Profile_Picture_URL: string | undefined;
-  Password_Hash: string;
-  Role: string;
-}
-
-// Extend the Session type
 declare module "next-auth" {
   interface Session {
     user: {
@@ -41,18 +32,16 @@ export const authOptions: AuthOptions = {
         const { identifier, password } = credentials;
 
         try {
-          const [rows] = await db.query(
+          const [user] = await queryDatabase<UserInterface["full"]>(
             `SELECT * FROM User WHERE Username = ? OR Email = ? LIMIT 1`,
             [identifier, identifier]
           );
 
-          const user = (rows as User[])[0];
           if (!user) throw new Error("Invalid username/email or password");
 
           const isValid = await bcrypt.compare(password, user.Password_Hash);
           if (!isValid) throw new Error("Invalid username/email or password");
 
-          // Return user details
           return {
             id: user.ID,
             name: user.Username,
@@ -70,23 +59,21 @@ export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 60, // 30 minutes
+    maxAge: 30 * 60,
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id; // Attach user ID to the token
+        token.id = user.id;
       }
 
-      // Query the role using the user ID in the token
       if (token.id) {
         try {
-          const [rows] = await db.query(
+          const [dbUser] = await queryDatabase<UserInterface["full"]>(
             `SELECT Role FROM User WHERE ID = ? LIMIT 1`,
             [token.id]
           );
-          const dbUser = (rows as User[])[0];
-          token.role = dbUser?.Role || "User"; // Default to "user" if no role is found
+          token.role = dbUser?.Role;
         } catch (error) {
           console.error("Error fetching user role:", error);
         }
@@ -97,19 +84,17 @@ export const authOptions: AuthOptions = {
     async session({ session, token }) {
       if (token?.id) {
         try {
-          const [rows] = await db.query(
+          const [dbUser] = await queryDatabase<UserInterface["full"]>(
             `SELECT ID, Username, Email, Profile_Picture_URL, Role FROM User WHERE ID = ? LIMIT 1`,
             [token.id]
           );
 
-          const dbUser = (rows as User[])[0];
           if (dbUser) {
-            // Always fetch the latest data
             session.user = {
               id: dbUser.ID,
               name: dbUser.Username,
               email: dbUser.Email,
-              image: dbUser.Profile_Picture_URL,
+              image: dbUser.Profile_Picture_URL ?? "/profile.png",
               role: dbUser.Role,
             };
           }
@@ -122,6 +107,5 @@ export const authOptions: AuthOptions = {
   },
 };
 
-// Default export for NextAuth
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

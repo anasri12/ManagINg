@@ -15,7 +15,15 @@ export default function Admin() {
   const router = useRouter();
 
   useEffect(() => {
-    if (status !== "authenticated" || session?.user.role !== "Admin") {
+    console.log(status);
+    if (!session) {
+      setShowError(true);
+      setTimeout(() => {
+        router.push("/home");
+      }, 500);
+    }
+    console.log(status);
+    if (status === "authenticated" && session?.user.role !== "Admin") {
       setShowError(true);
       setTimeout(() => {
         router.push("/home");
