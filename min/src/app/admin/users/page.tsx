@@ -9,40 +9,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-type UserType = {
-  ID: string;
-  Username: string;
-  Email: string;
-  Password_Hash: string;
-  Profile_Picture_URL: string;
-  CreatedAt: string;
-  UpdatedAt: string;
-  Role: string;
-};
+import { UserInterface } from "@/app/zods/user";
 
 export default function Users() {
-  const [users, setUsers] = useState([]); // State to store student data
-  const [loading, setLoading] = useState(true); // State for loading status
-  const [error, setError] = useState<null | string>(null); // State for error
+  const [users, setUsers] = useState<UserInterface["full"][]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<null | string>(null);
 
   useEffect(() => {
-    // Fetch data from the API when the component mounts
     const fetchData = async () => {
       try {
-        const response = await fetch("/api/users"); // Fetch from the API
+        const response = await fetch("/api/users");
         if (!response.ok) {
           throw new Error(`Error: ${response.statusText}`);
         }
-        const data = await response.json(); // Parse JSON data
-        setUsers(data); // Set the fetched data to state
-        setLoading(false); // Set loading to false
+        const data = await response.json();
+        setUsers(data);
+        setLoading(false);
       } catch (error) {
-        // Narrow the type of error
         if (error instanceof Error) {
-          setError(error.message); // Set the error message
+          setError(error.message);
         } else {
-          setError("An unknown error occurred"); // Fallback for unexpected error types
+          setError("An unknown error occurred");
         }
         setLoading(false);
       }
@@ -72,7 +60,7 @@ export default function Users() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user: UserType) => (
+          {users.map((user) => (
             <TableRow key={user.ID}>
               <TableCell>{user.ID}</TableCell>
               <TableCell>{user.Username}</TableCell>

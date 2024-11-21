@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
-import { db } from "./db"; // Path to your MySQL connection file
+import { queryDatabase } from "@/app/utils/db";
+import { SessionSchema } from "../zods/session";
 
 /**
  * Registers a new user in the database
@@ -17,16 +18,18 @@ export async function registerUser(
   password: string,
   profilePictureUrl: string | null = null
 ): Promise<string> {
-  // Input validation
-  if (!username || !email || !password) {
-    throw new Error("Missing username, email, or password");
+  try {
+    SessionSchema.parse({ username, email, password, profilePictureUrl });
+  } catch (validationError) {
+    console.error("Validation Error:", validationError);
+    throw new Error("Invalid user data provided");
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10); // Securely hash the password
-  const userId = uuidv4(); // Generate a UUID v4
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const userId = uuidv4();
 
   try {
-    await db.query(
+    await queryDatabase(
       `
       INSERT INTO User (ID, Username, Email, Password_Hash, Profile_Picture_URL, CreatedAt, UpdatedAt)
       VALUES (?, ?, ?, ?, ?, NOW(), NOW())
@@ -34,7 +37,7 @@ export async function registerUser(
       [userId, username, email, hashedPassword, profilePictureUrl]
     );
 
-    return userId; // Return the new user's ID
+    return userId;
   } catch (error) {
     console.error("Error registering user:", error);
     throw new Error("Failed to register user");
