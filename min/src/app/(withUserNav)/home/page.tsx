@@ -1,22 +1,18 @@
 "use client";
+import Loading from "@/components/general/Loading";
 import { useSession } from "next-auth/react";
 
 import Image from "next/image";
-import { Loading } from "@/components/loading";
-import NavBar from "@/components/navbar";
 
 export default function Home() {
   const { status } = useSession();
 
   if (status === "loading") {
-    return <Loading></Loading>;
+    return <Loading />;
   }
 
   return (
-    <div
-      className="h-screen overflow-hidden flex flex-col" // Full height, no scroll, flex layout
-    >
-      <NavBar role="user"></NavBar>
+    <>
       <div className="flex justify-center font-inria text-[78px] mt-5">
         <div className="flex flex-col justify-center">
           <div>Better management</div>
@@ -32,6 +28,6 @@ export default function Home() {
           className="w-[700px] h-[450px]"
         ></Image>
       </div>
-    </div>
+    </>
   );
 }

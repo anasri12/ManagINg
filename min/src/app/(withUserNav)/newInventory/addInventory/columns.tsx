@@ -11,11 +11,11 @@ export type inventoryName = {
   BoughtFrom: string;
   CurrentUsedDay: string;
   Brand: string;
-  Price: Number;
+  Price: number;
   BoughtDate: string;
   EXPBFFDate: string;
   Picture: string;
-  Amount: Number;
+  Amount: number;
   GuaranteePeriod: string;
 };
 

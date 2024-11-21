@@ -1,5 +1,3 @@
-"use client";
-
 import { formatFileSize } from "@edgestore/react/utils";
 import { UploadCloudIcon, X } from "lucide-react";
 import * as React from "react";
