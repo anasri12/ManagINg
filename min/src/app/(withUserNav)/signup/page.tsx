@@ -1,9 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import NavBar from "@/components/navbar";
+import { useSession } from "next-auth/react";
+import Loading from "@/components/general/Loading";
 
 export default function SignupPage() {
+  const { data: session, status } = useSession();
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -11,6 +13,16 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (session) {
+      router.push("/home");
+    }
+  }, [session, router]);
+
+  if (status === "loading") {
+    return <Loading />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +40,6 @@ export default function SignupPage() {
     const data = await response.json();
 
     if (response.ok) {
-      // Redirect to the login page after successful signup
       router.push("/signin");
     } else {
       setError(data.error || "Failed to create account");
@@ -38,10 +49,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div
-      className="h-screen overflow-hidden flex flex-col" // Full height, no scroll, flex layout
-    >
-      <NavBar role="user"></NavBar>
+    <>
       <div className="mt-32 flex items-center justify-center ">
         <form
           onSubmit={handleSubmit}
@@ -103,6 +111,6 @@ export default function SignupPage() {
           </button>
         </form>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,13 +1,12 @@
 "use client";
 
-import NavBar from "@/components/navbar";
-import { SingleImageDropzone } from "@/components/SingleImageDropzone";
+import { SingleImageDropzone } from "@/components/general/SingleImageDropzone";
 import { useEdgeStore } from "@/lib/edgestore";
-import { signIn, useSession } from "next-auth/react"; // Importing useSession hook
+import { useSession } from "next-auth/react"; // Importing useSession hook
 import { useState } from "react";
 
 export default function Upload() {
-  const { data: session, update: updateSession } = useSession(); // Access session data and update function
+  const { data: session } = useSession(); // Access session data and update function
   const [file, setFile] = useState<File>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,9 +63,8 @@ export default function Upload() {
   };
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col gap-20">
-      <NavBar role="user" />
-      <div className="flex flex-col items-center gap-4">
+    <>
+      <div className="flex flex-col items-center gap-4 mt-20">
         <SingleImageDropzone
           width={200}
           height={200}
@@ -88,6 +86,6 @@ export default function Upload() {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

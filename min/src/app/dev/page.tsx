@@ -4,18 +4,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Loading from "@/components/general/Loading";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
-export default function Admin() {
+export default function Dev() {
   const { data: session, status } = useSession();
   const [showError, setShowError] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (status !== "authenticated" || session?.user.role !== "Admin") {
+    if (status !== "authenticated" || session?.user.role !== "Developer") {
       setShowError(true);
       setTimeout(() => {
         router.push("/home");
@@ -41,14 +39,6 @@ export default function Admin() {
             </Alert>
           </div>
         )}
-
-        {session && session.user.role === "Admin" ? (
-          <div className="mt-4 flex justify-center">
-            <Link href="/admin/users">
-              <Button variant="link">See All Users</Button>
-            </Link>
-          </div>
-        ) : null}
       </div>
     </>
   );

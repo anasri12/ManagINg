@@ -1,15 +1,14 @@
 "use client";
+
+import { useRouter } from "next/navigation";
+import Loading from "@/components/general/Loading";
+import { Checkbox } from "@/components/ui/checkbox";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Loading } from "@/components/loading";
-import NavBar from "@/components/navbar";
-import { Checkbox } from "@/components/ui/checkbox";
-import { navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
-import Link from "next/link";
 
-export default function newInventory() {
-  const { status } = useSession();
+const NewInventory = () => {
+  const { data: session, status } = useSession();
   const [inventoryName, setinventoryName] = useState<string>("");
   const [description, setdescription] = useState<string>("");
   const [colabWith, setcolabWith] = useState<string>("");
@@ -28,10 +27,7 @@ export default function newInventory() {
   }
 
   return (
-    <div
-      className="h-screen overflow-hidden flex flex-col" // Full height, no scroll, flex layout
-    >
-      <NavBar role="user" sign="signup"></NavBar>
+    <>
       <div className="font-inria font-normal mt-8 text-5xl pl-11 ">
         New / Create Inventory
       </div>
@@ -182,6 +178,7 @@ export default function newInventory() {
           </button>
         </Link>
       </div>
-    </div>
+    </>
   );
-}
+};
+export default NewInventory;
