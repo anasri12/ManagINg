@@ -9,6 +9,7 @@ import {
 } from "../ui/sheet";
 import Image from "next/image";
 import SignOutButton from "./SignOutButton";
+import Link from "next/link";
 
 export default function SideBar({ session }: { session: Session }) {
   return (
@@ -41,9 +42,16 @@ export default function SideBar({ session }: { session: Session }) {
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Profile</SheetTitle>
-          <SignOutButton />
+          <SheetTitle>MENU</SheetTitle>
         </SheetHeader>
+        <div className="mt-3 flex flex-col gap-3">
+          <Link href={"/personal"}>Personal</Link>
+          <Link href={"/group/1"}>Group 1</Link>
+          <Link href={"/group/2"}>Group 2</Link>
+          <Link href={"/personal"}>Add/Create Group</Link>
+          <Link href={"/personal"}>Setting</Link>
+          <SignOutButton />
+        </div>
       </SheetContent>
     </Sheet>
   );

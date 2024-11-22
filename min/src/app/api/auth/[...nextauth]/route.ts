@@ -2,7 +2,7 @@ import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import { queryDatabase } from "@/app/utils/db";
-import { UserInterface, UserSchema } from "../../../zods/user";
+import { UserInterface, UserSchema } from "../../../zods/db/user";
 
 declare module "next-auth" {
   interface Session {

@@ -6,3 +6,10 @@ export const QueryUserSchema = z.object({
   email: z.string().optional().nullable(),
   fields: z.string().optional().nullable(),
 });
+
+export const QueryOrganizationSchema = z.object({
+  code: z.string().optional().nullable(),
+  name: z.string().optional().nullable(),
+  founder: z.string().optional().nullable(),
+  fields: z.string().optional().nullable(),
+});

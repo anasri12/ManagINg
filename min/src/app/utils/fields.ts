@@ -8,3 +8,15 @@ export const UserFields = [
   "UpdatedAt",
   "Role",
 ];
+
+export const OrganizationFields = [
+  "Code",
+  "Name",
+  "Description",
+  "CreatedAt",
+  "UpdatedAt",
+  "Member_Number",
+  "Inventory_Number",
+  "Founder_ID",
+  "UpdatedBy",
+];
