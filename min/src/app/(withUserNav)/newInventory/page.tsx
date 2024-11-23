@@ -12,18 +12,23 @@ const NewInventory = () => {
   const [inventoryName, setinventoryName] = useState<string>("");
   const [description, setdescription] = useState<string>("");
   const [colabWith, setcolabWith] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([
+    "Name",
+    "Amount", // Default required columns
+  ]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+  const handleCheckboxChange = (column: string) => {
+    setSelectedColumns((prev) =>
+      prev.includes(column)
+        ? prev.filter((col) => col !== column)
+        : [...prev, column]
+    );
   };
 
   if (status === "loading") {
-    return <Loading></Loading>;
+    return <Loading />;
   }
 
   return (
@@ -69,81 +74,9 @@ const NewInventory = () => {
               <Checkbox id="name" disabled checked />
               <label
                 htmlFor="name"
-                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 Name
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox id="description" />
-              <label
-                htmlFor="description"
-                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Description
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox id="bouhtFrom" />
-              <label
-                htmlFor="bouhtFrom"
-                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Bouht From
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox id="currentUsedDay" />
-              <label
-                htmlFor="currentUsedDay"
-                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Current Used Day
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox id="brand" />
-              <label
-                htmlFor="brand"
-                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Brand
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox id="price" />
-              <label
-                htmlFor="price"
-                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Price
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox id="boughtDate" />
-              <label
-                htmlFor="boughtDate"
-                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Bought Date
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox id="expBffDate" />
-              <label
-                htmlFor="expBffDate"
-                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                EXP / BFF Date
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox id="picture" />
-              <label
-                htmlFor="picture"
-                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Picture
               </label>
             </div>
             <div className="flex items-center space-x-2">
@@ -155,20 +88,42 @@ const NewInventory = () => {
                 Amount
               </label>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox id="guaranteePeriod" />
-              <label
-                htmlFor="guaranteePeriod"
-                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Guarantee Period
-              </label>
-            </div>
+            {[
+              { id: "Description", label: "Description" },
+              { id: "BoughtFrom", label: "Bought From" },
+              { id: "CurrentUsedDay", label: "Current Used Day" },
+              { id: "Brand", label: "Brand" },
+              { id: "Price", label: "Price" },
+              { id: "BoughtDate", label: "Bought Date" },
+              { id: "EXPBFFDate", label: "EXP / BFF Date" },
+              { id: "Picture", label: "Picture" },
+              { id: "GuaranteePeriod", label: "Guarantee Period" },
+            ].map((column) => (
+              <div key={column.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={column.id}
+                  onCheckedChange={() => handleCheckboxChange(column.id)}
+                />
+                <label
+                  htmlFor={column.id}
+                  className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {column.label}
+                </label>
+              </div>
+            ))}
           </div>
         </div>
       </div>
       <div className="flex w-full justify-center">
-        <Link href="newInventory/addInventory" legacyBehavior passHref>
+        <Link
+          href={{
+            pathname: "/newInventory/addInventory",
+            query: { columns: JSON.stringify(selectedColumns) },
+          }}
+          legacyBehavior
+          passHref
+        >
           <button
             type="submit"
             disabled={isSubmitting}
