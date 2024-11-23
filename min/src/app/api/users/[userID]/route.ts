@@ -7,7 +7,7 @@ import { queryDatabase } from "@/app/utils/db";
 import { UserIDSchema } from "@/app/zods/params";
 import { UserSchema } from "@/app/zods/db/user";
 import { QueryUserSchema } from "@/app/zods/query";
-import { UserFields } from "@/app/utils/fields";
+import { UserFields } from "@/app/utils/mapfields/user";
 
 export async function GET(
   req: NextRequest,

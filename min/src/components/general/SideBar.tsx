@@ -10,8 +10,38 @@ import {
 import Image from "next/image";
 import SignOutButton from "./SignOutButton";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { OrganizationWithMemberInterface } from "@/app/zods/db/subquery/organizationWithMember";
 
-export default function SideBar({ session }: { session: Session }) {
+export default function SideBar({
+  session,
+  groupName,
+}: {
+  session: Session;
+  groupName?: string;
+}) {
+  const userID = session?.user.id;
+  const [groups, setGroups] = useState<OrganizationWithMemberInterface[]>([]);
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        if (session) {
+          const response = await fetch(
+            `/api/users/${session.user.id}/organizations?fields=Code,Name`
+          );
+          if (!response.ok) {
+            throw new Error(`Error: ${response.statusText}`);
+          }
+          const data = await response.json();
+          setGroups(data);
+        }
+      } catch (err: any) {
+        console.log(err.message);
+      }
+    };
+
+    fetchGroups();
+  }, [userID]);
   return (
     <Sheet>
       <SheetTrigger>
@@ -33,9 +63,15 @@ export default function SideBar({ session }: { session: Session }) {
               <div className="w-36 justify-start flex">
                 {session.user?.name || "User"}
               </div>
-              <div className="w-36 justify-start flex text-gray-500 text-sm">
-                Personal
-              </div>
+              {groupName ? (
+                <div className="w-36 justify-start flex text-gray-500 text-sm">
+                  {groupName}
+                </div>
+              ) : (
+                <div className="w-36 justify-start flex text-gray-500 text-sm">
+                  Personal
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -45,11 +81,17 @@ export default function SideBar({ session }: { session: Session }) {
           <SheetTitle>MENU</SheetTitle>
         </SheetHeader>
         <div className="mt-3 flex flex-col gap-3">
-          <Link href={"/personal"}>Personal</Link>
-          <Link href={"/group/1"}>Group 1</Link>
-          <Link href={"/group/2"}>Group 2</Link>
-          <Link href={"/personal"}>Add/Create Group</Link>
-          <Link href={"/personal"}>Setting</Link>
+          <Link href={"/profile"}>Profile</Link>
+          {groupName ? <Link href={"/home"}>Personal</Link> : <></>}
+          <ul>
+            {groups.map((group) => (
+              <Link href={`/group/${group.Code}`} key={group.Code}>
+                {group.Name}
+              </Link>
+            ))}
+          </ul>
+          <Link href={"/addGroup"}>Add/Create Group</Link>
+          <Link href={"/setting"}>Setting</Link>
           <SignOutButton />
         </div>
       </SheetContent>

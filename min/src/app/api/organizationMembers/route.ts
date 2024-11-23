@@ -1,18 +1,15 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { queryDatabase } from "@/app/utils/db";
-import {
-  OrganizationWithMemberFields,
-  OrganizationWithMemberMaps,
-} from "@/app/utils/mapfields/organization";
-import { OrganizationWithMemberSchema } from "@/app/zods/db/subquery/organizationWithMember";
-import { QueryOnlySchema } from "@/app/zods/query";
+import { OrganizationMemberFields } from "@/app/utils/mapfields/organization";
+import { OrganizationMemberSchema } from "@/app/zods/db/organizationMember";
+import { QueryOrganizationMemberSchema } from "@/app/zods/query";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userID: string; organizationID: string } }
+  { params }: { params: { userID: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,20 +19,25 @@ export async function GET(
     }
 
     const searchParams = req.nextUrl.searchParams;
-    const queryParams = { fields: searchParams.get("fields") };
+    const queryParams = {
+      id: searchParams.get("id"),
+      role: searchParams.get("role"),
+      organization_code: searchParams.get("organization_code"),
+      fields: searchParams.get("fields"),
+    };
 
     console.log("Query Parameters:", queryParams);
 
-    const filters = QueryOnlySchema.parse(queryParams);
+    const filters = QueryOrganizationMemberSchema.parse(queryParams);
 
     const selectedFields = filters.fields
       ? filters.fields.split(",").map((field) => field.trim())
-      : OrganizationWithMemberFields;
+      : OrganizationMemberFields;
 
     console.log("Selected Fields:", selectedFields);
 
     const invalidFields = selectedFields.filter(
-      (field) => !OrganizationWithMemberFields.includes(field)
+      (field) => !OrganizationMemberFields.includes(field)
     );
     if (invalidFields.length > 0) {
       return NextResponse.json(
@@ -47,43 +49,46 @@ export async function GET(
       );
     }
 
-    const prefixedFields = selectedFields.map(
-      (field) => `${OrganizationWithMemberMaps[field]}.${field}`
-    );
-
-    console.log("Prefixed Fields:", prefixedFields);
+    const selectClause = selectedFields.join(", ");
 
     const conditions: string[] = [];
     const filter_params: any[] = [];
 
-    conditions.push("gm.User_ID = ?");
+    conditions.push("User_ID = ?");
     filter_params.push(params.userID);
 
-    conditions.push("g.Code = ?");
-    filter_params.push(params.organizationID);
+    if (filters.id) {
+      conditions.push("ID = ?");
+      filter_params.push(filters.id);
+    }
+
+    if (filters.role) {
+      conditions.push("Role = ?");
+      filter_params.push(filters.role);
+    }
+
+    if (filters.organization_code) {
+      conditions.push("Organization_Code = ?");
+      filter_params.push(filters.organization_code);
+    }
 
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-    const selectClause = prefixedFields.join(", ");
-    console.log(selectClause);
-
-    const sql = `
-        SELECT ${selectClause}
-        FROM Organization g
-        INNER JOIN Organization_Member gm ON g.Code = gm.Organization_Code
-        ${whereClause}`;
+    const sql = `SELECT ${selectClause} FROM User ${whereClause}`;
 
     console.log("SQL Query:", sql);
     console.log("Query Params:", filter_params);
 
-    const groups = await queryDatabase<any[]>(sql, filter_params);
-    console.log("Database Results:", groups);
+    const groupMembers = await queryDatabase<any[]>(sql, filter_params);
+    console.log("Database Results:", groupMembers);
 
-    const validatedGroups = selectedFields.includes("*")
-      ? groups.map((group) => OrganizationWithMemberSchema.parse(group))
-      : groups.map((group) => {
-          const schema = OrganizationWithMemberSchema;
+    const validatedUsers = selectedFields.includes("*")
+      ? groupMembers.map((groupMember) =>
+          OrganizationMemberSchema["full"].parse(groupMember)
+        )
+      : groupMembers.map((groupMember) => {
+          const schema = OrganizationMemberSchema["full"];
           return z
             .object(
               selectedFields.reduce((acc, field) => {
@@ -94,10 +99,10 @@ export async function GET(
                 return acc;
               }, {} as z.ZodRawShape)
             )
-            .parse(group);
+            .parse(groupMember);
         });
 
-    return NextResponse.json(validatedGroups);
+    return NextResponse.json(validatedUsers);
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error("Validation error:", error.errors);
@@ -107,7 +112,7 @@ export async function GET(
       );
     }
 
-    console.error("Error fetching organizations:", error);
+    console.error("Error fetching users:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }

@@ -1,14 +1,19 @@
 "use client";
 
 import { OrganizationInterface } from "@/app/zods/db/organization";
+import { OrganizationWithMemberInterface } from "@/app/zods/db/subquery/organizationWithMember";
 import Loading from "@/components/general/Loading";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
-export default function UserGroups() {
+export default function UserGroups({
+  params,
+}: {
+  params: { groupID: string };
+}) {
   const { data: session } = useSession();
   const userID = session?.user.id;
-  const [groups, setGroups] = useState<OrganizationInterface["full"][]>([]);
+  const [groups, setGroups] = useState<OrganizationWithMemberInterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,7 +22,7 @@ export default function UserGroups() {
       try {
         if (session) {
           const response = await fetch(
-            `/api/users/${userID}/organizations?fields=Code,Name`
+            `/api/users/${userID}/organizations/${params.groupID}`
           );
           if (!response.ok) {
             throw new Error(`Error: ${response.statusText}`);

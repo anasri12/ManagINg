@@ -1,9 +1,11 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { queryDatabase } from "@/app/utils/db";
-import { OrganizationFields } from "@/app/utils/fields";
+import {
+  OrganizationWithMemberFields,
+  OrganizationWithMemberMaps,
+} from "@/app/utils/mapfields/organization";
 import { OrganizationSchema } from "@/app/zods/db/organization";
-import { UserIDSchema } from "@/app/zods/params";
-import { QueryOrganizationSchema } from "@/app/zods/query";
+import { QueryOnlySchema } from "@/app/zods/query";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -20,24 +22,20 @@ export async function GET(
     }
 
     const searchParams = req.nextUrl.searchParams;
-    console.log(searchParams);
-    console.log(searchParams.get("fields"));
-    const queryParams = {
-      fields: searchParams.get("fields"),
-    };
+    const queryParams = { fields: searchParams.get("fields") };
 
     console.log("Query Parameters:", queryParams);
 
-    const filters = QueryOrganizationSchema.parse(queryParams);
+    const filters = QueryOnlySchema.parse(queryParams);
 
     const selectedFields = filters.fields
       ? filters.fields.split(",").map((field) => field.trim())
-      : OrganizationFields;
+      : OrganizationWithMemberFields;
 
     console.log("Selected Fields:", selectedFields);
 
     const invalidFields = selectedFields.filter(
-      (field) => !OrganizationFields.includes(field)
+      (field) => !OrganizationWithMemberFields.includes(field)
     );
     if (invalidFields.length > 0) {
       return NextResponse.json(
@@ -49,19 +47,29 @@ export async function GET(
       );
     }
 
-    const selectClause = selectedFields.join(", ");
+    const prefixedFields = selectedFields.map(
+      (field) => `${OrganizationWithMemberMaps[field]}.${field}`
+    );
+
+    console.log("Prefixed Fields:", prefixedFields);
 
     const conditions: string[] = [];
     const filter_params: any[] = [];
 
-    conditions.push("Founder_ID = ?");
+    conditions.push("gm.User_ID = ?");
     filter_params.push(params.userID);
 
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-    const sql = `SELECT ${selectClause} FROM Organization ${whereClause}`;
-    
+    const selectClause = prefixedFields.join(", ");
+
+    const sql = `
+        SELECT ${selectClause}
+        FROM Organization g
+        INNER JOIN Organization_Member gm ON g.Code = gm.Organization_Code
+        ${whereClause}`;
+
     console.log("SQL Query:", sql);
     console.log("Query Params:", filter_params);
 
@@ -95,7 +103,7 @@ export async function GET(
       );
     }
 
-    console.error("Error fetching users:", error);
+    console.error("Error fetching organizations:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }
