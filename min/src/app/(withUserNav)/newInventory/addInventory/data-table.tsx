@@ -51,13 +51,9 @@ export function DataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = React.useState({});
   const [tableData, setTableData] = useState<TData[]>(data);
   const [newItem, setNewItem] = useState<Partial<TData>>({});
-  const [isAdding, setIsAdding] = useState(false); // Track whether the add box is visible
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, boolean>
-  >({}); // Track validation errors for individual fields
+  const [isAdding, setIsAdding] = useState(false);
 
   const fieldConfig: Record<string, string> = {
-    id: "number",
     Name: "text",
     Description: "text",
     Brand: "text",
@@ -89,61 +85,19 @@ export function DataTable<TData, TValue>({
     },
   });
 
-  // const validateFields = () => {
-  //   const errors: Record<string, boolean> = {};
-  //   let hasError = false;
-
-  //   // Validate all fields in the newItem object
-  //   const requiredFields = [
-  //     "Name",
-  //     "Description",
-  //     "Brand",
-  //     "Price",
-  //     "Amount",
-  //     "BoughtFrom",
-  //     "BoughtDate",
-  //     "EXPBFFDate",
-  //     "CurrentUsedDay",
-  //     "Picture",
-  //     "GuaranteePeriod",
-  //   ];
-
-  //   requiredFields.forEach((field) => {
-  //     if (
-  //       !newItem[field as keyof TData] ||
-  //       (newItem[field as keyof TData] as string).trim() === ""
-  //     ) {
-  //       errors[field] = true;
-  //       hasError = true;
-  //     } else {
-  //       errors[field] = false;
-  //     }
-  //   });
-
-  //   setValidationErrors(errors);
-  //   return !hasError; // Return true if there are no errors
-  // };
-
   const handleAddItem = () => {
-    // if (!validateFields()) {
-    //   return; // Exit if validation fails
-    // }
-
-    // Add the new item
     setTableData((prev) => [
       ...prev,
-      { ...newItem, id: prev.length + 1 } as TData, // Ensure compatibility
+      { ...newItem, id: prev.length + 1 } as TData,
     ]);
     console.log(tableData);
-    setNewItem({}); // Clear form inputs
-    setValidationErrors({}); // Clear validation errors
-    setIsAdding(false); // Hide the add box
+    setNewItem({});
+    setIsAdding(false);
   };
 
   return (
     <div className="rounded-md border">
       <div className="flex items-center py-4 mx-10">
-        {/* Search Box */}
         <div className="flex flex-grow">
           <Input
             placeholder="Search by name..."
@@ -155,7 +109,6 @@ export function DataTable<TData, TValue>({
           />
         </div>
 
-        {/* Select Column Button */}
         <div className="ml-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -165,30 +118,27 @@ export function DataTable<TData, TValue>({
               {table
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) =>
+                      column.toggleVisibility(!!value)
+                    }
+                  >
+                    {column.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
-        {/* Add Item Button */}
         <div className="ml-4">
           <button
             type="button"
             className="w-auto py-2 px-4 text-sm text-white bg-red-600 rounded-md hover:bg-red-700"
-            onClick={() => setIsAdding(!isAdding)} // Toggle add box visibility
+            onClick={() => setIsAdding(!isAdding)}
           >
             {isAdding ? "Cancel" : "Add Item"}
           </button>
@@ -204,7 +154,7 @@ export function DataTable<TData, TValue>({
                 <div key={field} className="flex flex-col">
                   <label>{field}</label>
                   <input
-                    type={fieldConfig[field] || "text"} // Dynamic input type
+                    type={fieldConfig[field] || "text"}
                     value={(newItem[field as keyof TData] as string) || ""}
                     onChange={(e) =>
                       setNewItem({ ...newItem, [field]: e.target.value })
@@ -226,33 +176,29 @@ export function DataTable<TData, TValue>({
         )}
       </div>
 
-      {/* Table */}
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                );
-              })}
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </TableHead>
+              ))}
             </TableRow>
           ))}
         </TableHeader>
-        {/* Data Rows */}
         <TableBody>
-          {table.getRowModel().rows?.length ? (
+          {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
-                data-state={row.getIsSelected() && "selected"}
+                data-state={row.getIsSelected() ? "selected" : undefined}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
@@ -263,7 +209,7 @@ export function DataTable<TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
+              <TableCell colSpan={columns.length} className="text-center">
                 No results.
               </TableCell>
             </TableRow>

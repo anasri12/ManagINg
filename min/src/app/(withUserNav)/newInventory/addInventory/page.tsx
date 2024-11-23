@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import { DataTable } from "./data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { inventoryName } from "./columns";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown } from "lucide-react";
 
 export default function AddInventory() {
   const searchParams = useSearchParams();
@@ -20,26 +23,110 @@ export default function AddInventory() {
     // Update formFields with selected column names
     setFormFields(columns);
 
+    // Define all available columns with `id`
     const allColumns: ColumnDef<inventoryName>[] = [
-      { accessorKey: "Name", header: "Name" },
-      { accessorKey: "Description", header: "Description" },
-      { accessorKey: "BoughtFrom", header: "Bought From" },
-      { accessorKey: "CurrentUsedDay", header: "Current Used Day" },
-      { accessorKey: "Brand", header: "Brand" },
-      { accessorKey: "Price", header: "Price" },
-      { accessorKey: "BoughtDate", header: "Bought Date" },
-      { accessorKey: "EXPBFFDate", header: "EXP / BFF Date" },
-      { accessorKey: "Picture", header: "Picture" },
-      { accessorKey: "Amount", header: "Amount" },
-      { accessorKey: "GuaranteePeriod", header: "Guarantee Period" },
+      {
+        id: "select", // Custom column for row selection
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(value) =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
+      {
+        id: "id",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            ID
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => row.original.id,
+      },
+      {
+        id: "Name",
+        header: "Name",
+        cell: ({ row }) => row.original.Name,
+      },
+      {
+        id: "Description",
+        header: "Description",
+        cell: ({ row }) => row.original.Description,
+      },
+      {
+        id: "BoughtFrom",
+        header: "Bought From",
+        cell: ({ row }) => row.original.BoughtFrom,
+      },
+      {
+        id: "CurrentUsedDay",
+        header: "Current Used Day",
+        cell: ({ row }) => row.original.CurrentUsedDay,
+      },
+      {
+        id: "Brand",
+        header: "Brand",
+        cell: ({ row }) => row.original.Brand,
+      },
+      {
+        id: "Price",
+        header: "Price",
+        cell: ({ row }) => row.original.Price,
+      },
+      {
+        id: "BoughtDate",
+        header: "Bought Date",
+        cell: ({ row }) => row.original.BoughtDate,
+      },
+      {
+        id: "EXPBFFDate",
+        header: "EXP / BFF Date",
+        cell: ({ row }) => row.original.EXPBFFDate,
+      },
+      {
+        id: "Picture",
+        header: "Picture",
+        cell: ({ row }) => row.original.Picture,
+      },
+      {
+        id: "Amount",
+        header: "Amount",
+        cell: ({ row }) => row.original.Amount,
+      },
+      {
+        id: "GuaranteePeriod",
+        header: "Guarantee Period",
+        cell: ({ row }) => row.original.GuaranteePeriod,
+      },
     ];
 
-    // Filter the selected columns safely
-    const selectedColumns = allColumns.filter(
-      (col) => "accessorKey" in col && columns.includes(col.accessorKey)
+    // Combine required and selected columns
+    const requiredColumns = allColumns.filter(
+      (col) => col.id === "select" || col.id === "id"
     );
 
-    setDynamicColumns(selectedColumns);
+    const additionalColumns = allColumns.filter((col) =>
+      columns.includes(col.id!)
+    );
+
+    // Update dynamic columns state
+    setDynamicColumns([...requiredColumns, ...additionalColumns]);
   }, [searchParams]);
 
   return (
