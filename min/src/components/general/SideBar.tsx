@@ -80,18 +80,33 @@ export default function SideBar({
         <SheetHeader>
           <SheetTitle>MENU</SheetTitle>
         </SheetHeader>
-        <div className="mt-3 flex flex-col gap-3">
-          <Link href={"/profile"}>Profile</Link>
+        <div className="mt-3 flex flex-col">
+          <Link href={"/profile"} className="mb-2">
+            Profile
+          </Link>
           {groupName ? <Link href={"/home"}>Personal</Link> : <></>}
-          <ul>
-            {groups.map((group) => (
-              <Link href={`/group/${group.Code}`} key={group.Code}>
-                {group.Name}
-              </Link>
-            ))}
-          </ul>
-          <Link href={"/addGroup"}>Add/Create Group</Link>
-          <Link href={"/setting"}>Setting</Link>
+          {groups ? (
+            <ul>
+              {groups.map((group) => (
+                <Link
+                  href={`/group/${group.Code}`}
+                  key={group.Code}
+                  className="mb-2"
+                >
+                  {group.Name}
+                </Link>
+              ))}
+            </ul>
+          ) : (
+            <></>
+          )}
+
+          <Link href={"/addGroup"} className="mb-2">
+            Add/Create Group
+          </Link>
+          <Link href={"/setting"} className="mb-2">
+            Setting
+          </Link>
           <SignOutButton />
         </div>
       </SheetContent>
