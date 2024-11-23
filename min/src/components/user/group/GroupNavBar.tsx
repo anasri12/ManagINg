@@ -62,7 +62,7 @@ export default function GroupNavBar({
     // Redirect if there's an error
     if (error) {
       alert(error); // Optionally display an alert or toast message
-      router.back(); // Redirect to the previous page
+      router.push("/home"); // Redirect to the previous page
     }
   }, [error, router]);
 
