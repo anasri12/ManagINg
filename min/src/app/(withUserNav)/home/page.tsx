@@ -14,9 +14,9 @@ export default function Home() {
   return (
     <>
       <div className="flex justify-center font-inria text-[78px] mt-5">
-        <div className="flex flex-col justify-center">
+        <div className="flex flex-col justify-center items-center">
           <div>Better management</div>
-          <div className="flex justify-center">is better life.</div>
+          <div>is better life.</div>
         </div>
       </div>
       <div className="flex justify-center">

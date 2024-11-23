@@ -67,7 +67,7 @@ export default function GroupNavBar({
   }, [error, router]);
 
   if (loading) {
-    return <div>Loading...</div>; // Optionally use a spinner or loading component
+    return <div></div>; // Optionally use a spinner or loading component
   }
 
   if (error) {
@@ -110,7 +110,7 @@ export default function GroupNavBar({
       ) : (
         <RenderMode />
       )}
-      <div className="w-auto h-px bg-[#d4afaf] border-1 rounded-md mx-12"></div>
+      <div className="w-auto h-px bg-[#a9a9a9] border-1 rounded-md mx-12"></div>
     </div>
   );
 }
