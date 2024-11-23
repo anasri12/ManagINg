@@ -4,9 +4,9 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { registerUser } from "@/app/utils/auth";
 import { queryDatabase } from "@/app/utils/db";
-import { UserSchema } from "@/app/zods/user";
+import { UserSchema } from "@/app/zods/db/user";
 import { QueryUserSchema } from "@/app/zods/query";
-import { UserFields } from "@/app/utils/fields";
+import { UserFields } from "@/app/utils/mapfields/user";
 
 export async function GET(req: NextRequest) {
   try {

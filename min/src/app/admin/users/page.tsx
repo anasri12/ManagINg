@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserInterface } from "@/app/zods/user";
+import { UserInterface } from "@/app/zods/db/user";
 
 export default function Users() {
   const [users, setUsers] = useState<UserInterface["full"][]>([]);
