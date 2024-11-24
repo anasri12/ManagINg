@@ -60,7 +60,7 @@ export default function GroupManagement({
 
   return (
     <>
-      <Table className="mt-5">
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead>ID</TableHead>

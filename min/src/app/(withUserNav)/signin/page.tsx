@@ -47,7 +47,7 @@ export default function SignInPage() {
   return (
     <>
       {!session ? (
-        <div className="mt-32 flex items-center justify-center">
+        <div className="h-[80vh] flex items-center justify-center">
           <div className="p-6 border rounded-md shadow-md max-w-md w-full">
             <h1 className="text-3xl font-semibold text-center mb-6">Sign In</h1>
 

@@ -36,7 +36,7 @@ export default function Inbox() {
 
   return (
     <>
-      <div className="font-inria font-normal mt-8 text-5xl pl-11 [text-shadow:_0_2px_4px_rgb(0_0_0_/_0.3)] mb-5">
+      <div className="font-inria font-normal mt-3 text-5xl pl-11 [text-shadow:_0_2px_4px_rgb(0_0_0_/_0.3)] mb-5">
         Inbox
       </div>
       <div className="font-inria font-normal text-xl [text-shadow:_0_2px_4px_rgb(0_0_0_/_0.3)] mb-2 ml-20">

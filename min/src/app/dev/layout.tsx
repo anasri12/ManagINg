@@ -16,6 +16,7 @@ export default async function RootLayout({
         <DevNavBar session={session} />
       </div>
       <main className="pt-[64px] h-screen w-full overflow-hidden flex flex-col">
+        <div className="mb-5"></div>
         {children}
       </main>
     </>

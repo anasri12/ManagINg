@@ -50,7 +50,7 @@ export default function SignupPage() {
 
   return (
     <>
-      <div className="mt-32 flex items-center justify-center ">
+      <div className="h-[80vh] flex items-center justify-center ">
         <form
           onSubmit={handleSubmit}
           className="p-6 border rounded-md shadow-md max-w-md w-full"

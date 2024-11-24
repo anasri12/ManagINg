@@ -40,7 +40,7 @@ export default function MyInventory() {
 
   return (
     <>
-      <div className="font-inria font-normal mt-8 text-5xl pl-11 [text-shadow:_0_2px_4px_rgb(0_0_0_/_0.3)]">
+      <div className="font-inria font-normal mt-3 text-5xl pl-11 [text-shadow:_0_2px_4px_rgb(0_0_0_/_0.3)]">
         My Inventory
       </div>
       <ul className="mb-2 pl-5">

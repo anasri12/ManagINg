@@ -64,7 +64,7 @@ export default function Upload() {
 
   return (
     <>
-      <div className="flex flex-col items-center gap-4 mt-20">
+      <div className="flex flex-col items-center gap-4 h-[80vh]">
         <SingleImageDropzone
           width={200}
           height={200}

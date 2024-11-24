@@ -33,7 +33,7 @@ const NewInventory = () => {
 
   return (
     <>
-      <div className="font-inria font-normal mt-8 text-5xl pl-11 ">
+      <div className="font-inria font-normal mt-3 text-5xl pl-11 ">
         New / Create Inventory
       </div>
       <div className="font-roboto font-normal mt-16 text-xl pl-36 ">

@@ -9,10 +9,13 @@ export default async function RootLayout({
 
   return (
     <>
-      <div className="fixed top-0 left-0 w-full z-50">
+      {/* Navbar with fixed position and high z-index */}
+      <div className="fixed top-0 left-0 w-full z-50 bg-white">
         <UserNavBar session={session} />
       </div>
-      <main className="pt-[64px] h-screen w-full overflow-hidden flex flex-col">
+      {/* Main content with padding to avoid overlap */}
+      <main className="pt-[64px] h-screen w-full overflow-auto flex flex-col">
+        <div className="mb-5"></div>
         {children}
       </main>
     </>

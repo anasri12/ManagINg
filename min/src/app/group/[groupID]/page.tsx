@@ -69,7 +69,7 @@ export default function Home({ params }: { params: { groupID: string } }) {
 
   return (
     <>
-      <div className="flex justify-center font-inria text-[78px] mt-5 mb-2">
+      <div className="flex justify-center font-inria text-[78px] mb-2">
         <div className="flex flex-col justify-center items-center">
           <div>Group {name[0].Name}</div>
           <div>Management</div>
