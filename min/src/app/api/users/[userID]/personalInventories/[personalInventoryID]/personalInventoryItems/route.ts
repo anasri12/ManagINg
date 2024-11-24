@@ -64,13 +64,18 @@ export async function GET(
 
     console.log("SQL Query:", sql);
     console.log("Query Params:", filter_params);
-    
 
     const personalInventoryItems = await queryDatabase<any[]>(
       sql,
       filter_params
     );
     console.log("Database Results:", personalInventoryItems);
+
+    if (!Array.isArray(personalInventoryItems)) {
+      throw new Error(
+        "Unexpected query result: Expected an array, but got a ResultSetHeader."
+      );
+    }
 
     const validatedGroups = selectedFields.includes("*")
       ? personalInventoryItems.map((personalInventoryItem) =>

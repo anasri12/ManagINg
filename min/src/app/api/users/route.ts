@@ -75,8 +75,12 @@ export async function GET(req: NextRequest) {
     console.log("SQL Query:", sql);
     console.log("Query Params:", params);
 
-    const users = await queryDatabase<any[]>(sql, params);
+    const users = await queryDatabase<any>(sql, params);
     console.log("Database Results:", users);
+
+    if (!Array.isArray(users)) {
+      throw new Error("Unexpected query result: Expected an array, but got a ResultSetHeader.");
+    }
 
     const validatedUsers = selectedFields.includes("*")
       ? users.map((user) => UserSchema["full"].parse(user))

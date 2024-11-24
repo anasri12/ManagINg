@@ -77,6 +77,12 @@ export async function GET(
     const groupMembers = await queryDatabase<any[]>(sql, filter_params);
     console.log("Database Results:", groupMembers);
 
+    if (!Array.isArray(groupMembers)) {
+      throw new Error(
+        "Unexpected query result: Expected an array, but got a ResultSetHeader."
+      );
+    }
+
     const validatedUsers = selectedFields.includes("*")
       ? groupMembers.map((groupMember) =>
           OrganizationMemberSchema["full"].parse(groupMember)

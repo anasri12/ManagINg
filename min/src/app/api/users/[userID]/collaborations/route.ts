@@ -104,7 +104,13 @@ export async function GET(
     console.log("Query Params:", filter_params);
 
     const collaborations = await queryDatabase<any[]>(sql, filter_params);
-
+    
+    if (!Array.isArray(collaborations)) {
+        throw new Error(
+          "Unexpected query result: Expected an array, but got a ResultSetHeader."
+        );
+      }
+  
     const validatedUsers = selectedFields.includes("*")
       ? collaborations.map((collaboration) =>
           CollaborationSchema["full"].parse(collaboration)

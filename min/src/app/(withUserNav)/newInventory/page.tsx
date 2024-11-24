@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import Loading from "@/components/general/Loading";
 import { Checkbox } from "@/components/ui/checkbox";
-import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 
@@ -26,15 +25,53 @@ const NewInventory = () => {
         ? prev.filter((col) => col !== column)
         : [...prev, column]
     );
+    console.log(selectedColumns);
   };
-  const handleCreateInventory = () => {
-    const queryString = new URLSearchParams({
-      name: inventoryName,
-      description: description,
-      colabUsers: colabWith,
-    }).toString();
 
-    router.push(`/myInventory?${queryString}`);
+  const handleSubmit = async () => {
+    if (!session) {
+      alert("You must be logged in to create a new inventory.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(
+        `/api/users/${session.user.id}/personalInventories`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            Name: inventoryName,
+            Description: description || null,
+            Owner_ID: session.user.id,
+            Input_Enable: { Enable: selectedColumns },
+            UpdatedBy: session.user.id,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error creating inventory:", errorData);
+        alert("Failed to create inventory: " + errorData.message);
+        return;
+      }
+
+      const result = await response.json();
+      console.log("Inventory created successfully:", result);
+
+      // Redirect to the inventory list or the newly created inventory
+      router.push(`/myInventory`);
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      alert("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (status === "loading") {
@@ -64,17 +101,6 @@ const NewInventory = () => {
             value={description}
             onChange={(e) => setdescription(e.target.value)}
             className="w-96 h-9 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
-            required
-          />
-        </div>
-        <div className="flex gap-4 mt-6">
-          <label className=" text-gray-950">Colab with</label>
-          <input
-            type="text"
-            value={colabWith}
-            onChange={(e) => setcolabWith(e.target.value)}
-            className="w-96 h-9 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
-            required
           />
         </div>
         <div className="flex gap-4 mt-6">
@@ -100,14 +126,14 @@ const NewInventory = () => {
             </div>
             {[
               { id: "Description", label: "Description" },
-              { id: "BoughtFrom", label: "Bought From" },
-              { id: "CurrentUsedDay", label: "Current Used Day" },
+              { id: "Bought_From", label: "Bought From" },
+              { id: "Current_Used_Day", label: "Current Used Day" },
               { id: "Brand", label: "Brand" },
               { id: "Price", label: "Price" },
-              { id: "BoughtDate", label: "Bought Date" },
-              { id: "EXPBFFDate", label: "EXP / BFF Date" },
-              { id: "Picture", label: "Picture" },
-              { id: "GuaranteePeriod", label: "Guarantee Period" },
+              { id: "Bought_Date", label: "Bought Date" },
+              { id: "EXP_BFF_Date", label: "EXP / BFF Date" },
+              { id: "Picture_URL", label: "Picture" },
+              { id: "Guarantee_Period", label: "Guarantee Period" },
             ].map((column) => (
               <div key={column.id} className="flex items-center space-x-2">
                 <Checkbox
@@ -126,24 +152,16 @@ const NewInventory = () => {
         </div>
       </div>
       <div className="flex w-full justify-center">
-        <Link
-          href={{
-            pathname: "/newInventory/addInventory",
-            query: { columns: JSON.stringify(selectedColumns) },
-          }}
-          legacyBehavior
-          passHref
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="w-auto mt-10 py-2 px-4 text-xl text-white bg-red-600 rounded-md hover:bg-red-700"
         >
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-auto mt-10 py-2 px-4 text-xl text-white bg-red-600 rounded-md hover:bg-red-700 "
-          >
-            {isSubmitting ? "Signing Up..." : "Create new inventory"}
-          </button>
-        </Link>
+          {isSubmitting ? "Creating Inventory..." : "Create new inventory"}
+        </button>
       </div>
     </>
   );
 };
+
 export default NewInventory;

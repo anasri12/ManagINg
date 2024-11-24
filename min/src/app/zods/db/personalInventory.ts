@@ -19,18 +19,22 @@ const FullPersonalInventorySchema = z.object({
   Name: z.string(),
   Description: z.string().nullable(),
   Owner_ID: z.string(),
+  Owner_Username: z.string(),
   CreatedAt: z.date(),
   UpdatedAt: z.date(),
   Input_Enable: InputEnableSchema,
   Collaborator_Number: z.number(),
+  Collaborator_Username: z.array(z.string()),
   UpdatedBy: z.string(),
+  UpdatedBy_Username: z.string(),
 });
 
 const PostPersonalInventorySchema = z.object({
   Name: z.string(),
   Description: z.string().nullable(),
   Owner_ID: z.string(),
-  Input_Enable: z.array(z.string()),
+  Input_Enable: InputEnableSchema,
+  UpdatedBy: z.string(),
 });
 
 const PatchPersonalInventorySchema = FullPersonalInventorySchema.partial();
