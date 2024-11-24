@@ -52,6 +52,11 @@ export function DataTable<TData, TValue>({
   const [tableData, setTableData] = useState<TData[]>(data);
   const [newItem, setNewItem] = useState<Partial<TData>>({});
   const [isAdding, setIsAdding] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, boolean>
+  >({}); // Track validation errors for fields
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [editedRow, setEditedRow] = useState<Partial<TData>>({});
 
   const fieldConfig: Record<string, string> = {
     Name: "text",
@@ -85,7 +90,30 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  const validateFields = () => {
+    const errors: Record<string, boolean> = {};
+    let hasError = false;
+
+    formFields.forEach((field) => {
+      if (
+        !newItem[field as keyof TData] ||
+        (newItem[field as keyof TData] as string).trim() === ""
+      ) {
+        errors[field] = true;
+        hasError = true;
+      } else {
+        errors[field] = false;
+      }
+    });
+
+    setValidationErrors(errors);
+    return !hasError;
+  };
+
   const handleAddItem = () => {
+    if (!validateFields()) {
+      return;
+    }
     setTableData((prev) => [
       ...prev,
       { ...newItem, id: prev.length + 1 } as TData,
@@ -95,6 +123,32 @@ export function DataTable<TData, TValue>({
     setIsAdding(false);
   };
 
+  const handleDelete = (rowId: string) => {
+    const confirmed = confirm("Are you sure you want to delete this row?");
+    if (confirmed) {
+      setTableData((prev) => prev.filter((row: any) => row.id !== rowId));
+    }
+  };
+
+  const handleEdit = (row: TData) => {
+    setEditingRowId((row as any).id);
+    setEditedRow(row);
+  };
+
+  const handleSave = () => {
+    setTableData((prev) =>
+      prev.map((row: any) =>
+        row.id === editingRowId ? { ...row, ...editedRow } : row
+      )
+    );
+    setEditingRowId(null);
+    setEditedRow({});
+  };
+
+  const handleCancel = () => {
+    setEditingRowId(null);
+    setEditedRow({});
+  };
   return (
     <div className="rounded-md border">
       <div className="flex items-center py-4 mx-10">
@@ -159,8 +213,16 @@ export function DataTable<TData, TValue>({
                     onChange={(e) =>
                       setNewItem({ ...newItem, [field]: e.target.value })
                     }
-                    className="w-full p-2 border rounded"
+                    className={`w-full p-2 border rounded ${
+                      validationErrors[field] ? "border-red-500" : ""
+                    }`}
                   />
+                  {validationErrors[field] && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Please fill in the field. If there is no information,
+                      enter "-".
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -196,15 +258,63 @@ export function DataTable<TData, TValue>({
         <TableBody>
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() ? "selected" : undefined}
-              >
+              <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    {/* Render input only for editable fields */}
+                    {editingRowId === (row.original as any).id &&
+                    cell.column.id !== "id" &&
+                    cell.column.id !== "select" ? (
+                      <Input
+                        value={(editedRow as any)[cell.column.id] || ""}
+                        onChange={(e) =>
+                          setEditedRow((prev) => ({
+                            ...prev,
+                            [cell.column.id]: e.target.value,
+                          }))
+                        }
+                      />
+                    ) : (
+                      flexRender(cell.column.columnDef.cell, cell.getContext())
+                    )}
                   </TableCell>
                 ))}
+                <TableCell>
+                  {editingRowId === (row.original as any).id ? (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={handleSave}
+                        className="text-green-600 border-green-600"
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleCancel}
+                        className="text-red-600 border-red-600"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => handleEdit(row.original)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleDelete((row.original as any).id)}
+                        className="text-red-600 border-red-600"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  )}
+                </TableCell>
               </TableRow>
             ))
           ) : (
