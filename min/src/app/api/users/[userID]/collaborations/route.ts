@@ -10,6 +10,7 @@ import { UserFields } from "@/app/utils/mapfields/user";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { CollaborationFields } from "@/app/utils/mapfields/collaboration";
 import { CollaborationSchema } from "@/app/zods/db/collaboration";
+import { ResultSetHeader } from "mysql2/promise";
 
 export async function GET(
   req: NextRequest,
@@ -105,6 +106,12 @@ export async function GET(
 
     const collaborations = await queryDatabase<any[]>(sql, filter_params);
 
+    if (!Array.isArray(collaborations)) {
+      throw new Error(
+        "Unexpected query result: Expected an array, but got a ResultSetHeader."
+      );
+    }
+
     const validatedUsers = selectedFields.includes("*")
       ? collaborations.map((collaboration) =>
           CollaborationSchema["full"].parse(collaboration)
@@ -135,6 +142,92 @@ export async function GET(
     }
 
     console.error("Error fetching collaborations:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { userID: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.id !== params.userID) {
+      return NextResponse.json({ message: "Access Denied" }, { status: 403 });
+    }
+
+    const body = await req.json();
+
+    // Parse and validate the body
+    const parsedBody = CollaborationSchema["post"].parse(body);
+
+    // Fetch the Collaborator ID using their username
+    const fetchCollaboratorSQL = `SELECT ID FROM User WHERE Username = ?`;
+    const collaboratorResult = await queryDatabase<any>(
+      fetchCollaboratorSQL,
+      [parsedBody.Collaborator_Username] // Assume the body contains `Collaborator_Username`
+    );
+
+    if (!Array.isArray(collaboratorResult)) {
+      throw new Error(
+        "Unexpected query result: Expected an array, but got a ResultSetHeader."
+      );
+    }
+
+    if (!collaboratorResult || collaboratorResult.length === 0) {
+      return NextResponse.json(
+        { message: "Collaborator not found." },
+        { status: 404 }
+      );
+    }
+
+    const collaboratorID = collaboratorResult[0].ID;
+
+    // Proceed with inserting the collaboration record
+    const sql = `
+          INSERT INTO Collaboration 
+          (Permission, Status, Inventory_ID, Owner_ID, Collaborator_ID) 
+          VALUES (?, ?, ?, ?, ?)
+        `;
+
+    const result = await queryDatabase<ResultSetHeader>(sql, [
+      parsedBody.Permission,
+      parsedBody.Status,
+      parsedBody.Inventory_ID,
+      params.userID,
+      collaboratorID, // Use the fetched collaborator ID
+    ]);
+
+    if (Array.isArray(result)) {
+      throw new Error(
+        "Unexpected query result: Expected a ResultSetHeader, but got an array."
+      );
+    }
+
+    if (!result || result.affectedRows === 0) {
+      throw new Error("Failed to insert collaboration.");
+    }
+
+    const insertedID = result.insertId;
+
+    return NextResponse.json({
+      message: "Collaboration created successfully",
+      collaborationID: insertedID,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.errors);
+      return NextResponse.json(
+        { message: "Validation failed", errors: error.errors },
+        { status: 400 }
+      );
+    }
+
+    console.error("Error creating collaboration:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }

@@ -76,6 +76,12 @@ export async function GET(
     const groups = await queryDatabase<any[]>(sql, filter_params);
     console.log("Database Results:", groups);
 
+    if (!Array.isArray(groups)) {
+      throw new Error(
+        "Unexpected query result: Expected an array, but got a ResultSetHeader."
+      );
+    }
+
     const validatedGroups = selectedFields.includes("*")
       ? groups.map((group) => OrganizationSchema["full"].parse(group))
       : groups.map((group) => {

@@ -19,8 +19,8 @@ const PostCollaborationSchema = z.object({
   Status: z.enum(["Pending", "Accepted", "Rejected"]),
   Inventory_ID: z.number().int(),
   Owner_ID: z.string(),
-  Collaborator_ID: z.string(),
-  CreatedAt: z.date(),
+  Collaborator_ID: z.string().nullable(),
+  Collaborator_Username: z.string(),
 });
 
 const PatchCollaborationSchema = FullCollaborationSchema.partial();
