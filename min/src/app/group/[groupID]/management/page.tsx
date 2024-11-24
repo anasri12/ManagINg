@@ -9,23 +9,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserInterface } from "@/app/zods/db/user";
+import { OrganizationMemberInterface } from "@/app/zods/db/organizationMember";
+import { useSession } from "next-auth/react";
 
-export default function Users() {
-  const [users, setUsers] = useState<UserInterface["full"][]>([]);
+export default function GroupManagement({
+  params,
+}: {
+  params: { groupID: string };
+}) {
+  const { data: session } = useSession();
+  const [members, setMembers] = useState<OrganizationMemberInterface["full"][]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("/api/users");
-        if (!response.ok) {
-          throw new Error(`Error: ${response.statusText}`);
+        if (session) {
+          const response = await fetch(
+            `/api/users/${session?.user.id}/organizations/${params.groupID}/organizationMembers`
+          );
+          if (!response.ok) {
+            throw new Error(`Error: ${response.statusText}`);
+          }
+          const data = await response.json();
+          setMembers(data);
+          setLoading(false);
         }
-        const data = await response.json();
-        setUsers(data);
-        setLoading(false);
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);
@@ -52,28 +64,22 @@ export default function Users() {
         <TableHeader>
           <TableRow>
             <TableHead>ID</TableHead>
-            <TableHead>Username</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Password</TableHead>
-            <TableHead>Profile_Picture_URL</TableHead>
             <TableHead>Role</TableHead>
+            <TableHead>User_ID</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.ID}>
-              <TableCell>{user.ID}</TableCell>
-              <TableCell>{user.Username}</TableCell>
-              <TableCell>{user.Email}</TableCell>
-              <TableCell>{user.Password_Hash}</TableCell>
-              <TableCell>{user.Profile_Picture_URL ?? "-"}</TableCell>
-              <TableCell>{user.Role}</TableCell>
+          {members.map((member) => (
+            <TableRow key={member.ID}>
+              <TableCell>{member.ID}</TableCell>
+              <TableCell>{member.Role}</TableCell>
+              <TableCell>{member.User_ID}</TableCell>
             </TableRow>
           ))}
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell>Total Users: {users.length}</TableCell>
+            <TableCell>Total Users: {members.length}</TableCell>
           </TableRow>
         </TableFooter>
       </Table>

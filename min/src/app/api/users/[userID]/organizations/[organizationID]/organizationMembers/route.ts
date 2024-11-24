@@ -9,7 +9,7 @@ import { z } from "zod";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userID: string } }
+  { params }: { params: { userID: string; organizationID: number } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,7 +22,6 @@ export async function GET(
     const queryParams = {
       id: searchParams.get("id"),
       role: searchParams.get("role"),
-      organization_code: searchParams.get("organization_code"),
       fields: searchParams.get("fields"),
     };
 
@@ -54,8 +53,8 @@ export async function GET(
     const conditions: string[] = [];
     const filter_params: any[] = [];
 
-    conditions.push("User_ID = ?");
-    filter_params.push(params.userID);
+    conditions.push("Organization_Code = ?");
+    filter_params.push(params.organizationID);
 
     if (filters.id) {
       conditions.push("ID = ?");
@@ -67,15 +66,10 @@ export async function GET(
       filter_params.push(filters.role);
     }
 
-    if (filters.organization_code) {
-      conditions.push("Organization_Code = ?");
-      filter_params.push(filters.organization_code);
-    }
-
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-    const sql = `SELECT ${selectClause} FROM User ${whereClause}`;
+    const sql = `SELECT ${selectClause} FROM Organization_Member ${whereClause}`;
 
     console.log("SQL Query:", sql);
     console.log("Query Params:", filter_params);
