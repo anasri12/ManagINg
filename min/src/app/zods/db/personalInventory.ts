@@ -20,7 +20,7 @@ const FullPersonalInventorySchema = z.object({
   Description: z.string().nullable(),
   Owner_ID: z.string(),
   CreatedAt: z.date(),
-  UpdatedAt: z.date().nullable(),
+  UpdatedAt: z.date(),
   Input_Enable: InputEnableSchema,
   Collaborator_Number: z.number(),
   UpdatedBy: z.string(),

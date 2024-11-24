@@ -9,7 +9,7 @@ const FullOrganizationSchema = z.object({
   Member_Number: z.number().int(),
   Inventory_Number: z.number().int(),
   Founder_ID: z.string(),
-  UpdatedBy: z.string().nullable(),
+  UpdatedBy: z.string(),
 });
 
 const PostOrganizationSchema = FullOrganizationSchema;

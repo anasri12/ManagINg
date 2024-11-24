@@ -7,7 +7,7 @@ const FullUserSchema = z.object({
   Password_Hash: z.string(),
   Profile_Picture_URL: z.string().url().nullable(),
   CreatedAt: z.date(),
-  UpdatedAt: z.date().nullable(),
+  UpdatedAt: z.date(),
   Role: z.enum(["Admin", "User", "Developer"]),
 });
 

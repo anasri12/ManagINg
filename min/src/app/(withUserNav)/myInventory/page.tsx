@@ -7,8 +7,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function MyInventory() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const userID = session?.user.id;
+  const [loading, setLoading] = useState(true);
   const [inventories, setInventories] = useState<
     PersonalInventoryInterface["full"][]
   >([]);
@@ -24,6 +25,7 @@ export default function MyInventory() {
           }
           const data = await response.json();
           setInventories(data);
+          setLoading(false);
         }
       } catch (err: any) {
         console.log(err.message);
@@ -32,7 +34,7 @@ export default function MyInventory() {
 
     fetchInventories();
   }, [userID]);
-  if (status === "loading") {
+  if (loading) {
     return <Loading></Loading>;
   }
 
