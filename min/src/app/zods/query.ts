@@ -25,3 +25,10 @@ export const QueryOrganizationMemberSchema = z.object({
   user_id: z.string().optional().nullable(),
   fields: z.string().optional().nullable(),
 });
+
+export const QueryPersonalInventorySchema = z.object({
+  id: z.number().int().optional().nullable(),
+  name: z.string().optional().nullable(),
+  owner_id: z.string().optional().nullable(),
+  fields: z.string().optional().nullable(),
+});

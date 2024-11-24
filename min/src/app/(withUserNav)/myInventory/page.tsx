@@ -1,5 +1,6 @@
 "use client";
 
+import { PersonalInventoryInterface } from "@/app/zods/db/personalInventory";
 import Loading from "@/components/general/Loading";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";

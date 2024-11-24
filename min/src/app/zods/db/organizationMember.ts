@@ -3,7 +3,7 @@ import { z } from "zod";
 const FullOrganizationMemberSchema = z.object({
   ID: z.number(),
   Role: z.string(),
-  Organization_Code: z.string().nullable(),
+  Organization_Code: z.string(),
   User_ID: z.string(),
 });
 

@@ -84,19 +84,29 @@ export default function SideBar({
           <Link href={"/profile"} className="mb-2">
             Profile
           </Link>
-          {groupName ? <Link href={"/home"}>Personal</Link> : <></>}
+          {groupName ? (
+            <Link href={"/home"} className="mb-2">
+              Personal
+            </Link>
+          ) : (
+            <></>
+          )}
           {groups ? (
-            <ul>
-              {groups.map((group) => (
-                <Link
-                  href={`/group/${group.Code}`}
-                  key={group.Code}
-                  className="mb-2"
-                >
-                  {group.Name}
-                </Link>
-              ))}
-            </ul>
+            <>
+              <div className="mb-1">Group</div>
+              <div className="w-auto h-px bg-[#a9a9a9] border-1 rounded-md mb-1"></div>
+              <ul className="mb-2 pl-5">
+                {groups.map((group) => (
+                  <Link
+                    href={`/group/${group.Code}`}
+                    key={group.Code}
+                    className="mb-2"
+                  >
+                    {group.Name}
+                  </Link>
+                ))}
+              </ul>
+            </>
           ) : (
             <></>
           )}

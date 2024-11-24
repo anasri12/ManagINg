@@ -56,7 +56,7 @@ export default function AdminNavBar({ session }: { session: Session | null }) {
       ) : (
         <RenderMode />
       )}
-      <div className="w-auto h-px bg-[#d4afaf] border-1 rounded-md mx-12"></div>
+      <div className="w-auto h-px bg-[#a9a9a9] border-1 rounded-md mx-12"></div>
     </div>
   );
 }
