@@ -48,7 +48,7 @@ export default function Users() {
 
   return (
     <>
-      <Table className="mt-5">
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead>ID</TableHead>
