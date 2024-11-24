@@ -91,7 +91,7 @@ export default function SideBar({
           ) : (
             <></>
           )}
-          {groups ? (
+          {groups.length !== 0 ? (
             <>
               <div className="mb-1">Group</div>
               <div className="w-auto h-px bg-[#a9a9a9] border-1 rounded-md mb-1"></div>

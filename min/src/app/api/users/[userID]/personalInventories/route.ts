@@ -65,12 +65,14 @@ export async function GET(
     console.log("SQL Query:", sql);
     console.log("Query Params:", filter_params);
 
-    const groups = await queryDatabase<any[]>(sql, filter_params);
-    console.log("Database Results:", groups);
+    const personalInventories = await queryDatabase<any[]>(sql, filter_params);
+    console.log("Database Results:", personalInventories);
 
     const validatedGroups = selectedFields.includes("*")
-      ? groups.map((group) => PersonalInventorySchema["full"].parse(group))
-      : groups.map((group) => {
+      ? personalInventories.map((personalInventory) =>
+          PersonalInventorySchema["full"].parse(personalInventory)
+        )
+      : personalInventories.map((personalInventory) => {
           const schema = PersonalInventorySchema["full"];
           return z
             .object(
@@ -82,7 +84,7 @@ export async function GET(
                 return acc;
               }, {} as z.ZodRawShape)
             )
-            .parse(group);
+            .parse(personalInventory);
         });
 
     return NextResponse.json(validatedGroups);

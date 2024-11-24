@@ -20,7 +20,7 @@ export default function mySelectInventory({
       try {
         if (session) {
           const response = await fetch(
-            `/api/users/${userID}/personalInventories/${params.myInventoryID}`
+            `/api/users/${userID}/personalInventories/${params.myInventoryID}/personalInventoryItems`
           );
           if (!response.ok) {
             throw new Error(`Error: ${response.statusText}`);
