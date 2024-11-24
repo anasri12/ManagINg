@@ -1,15 +1,15 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { queryDatabase } from "@/app/utils/db";
-import { OrganizationMemberFields } from "@/app/utils/mapfields/organization";
-import { OrganizationMemberSchema } from "@/app/zods/db/organizationMember";
-import { QueryOrganizationMemberSchema } from "@/app/zods/query";
+import { PersonalInventoryItemFields } from "@/app/utils/mapfields/personalInventoryItem";
+import { PersonalInventoryItemSchema } from "@/app/zods/db/personalInventoryItem";
+import { QueryOnlySchema } from "@/app/zods/query";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userID: string } }
+  { params }: { params: { userID: string; personalInventoryID: number } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -20,24 +20,21 @@ export async function GET(
 
     const searchParams = req.nextUrl.searchParams;
     const queryParams = {
-      id: searchParams.get("id"),
-      role: searchParams.get("role"),
-      organization_code: searchParams.get("organization_code"),
       fields: searchParams.get("fields"),
     };
 
     console.log("Query Parameters:", queryParams);
 
-    const filters = QueryOrganizationMemberSchema.parse(queryParams);
+    const filters = QueryOnlySchema.parse(queryParams);
 
     const selectedFields = filters.fields
       ? filters.fields.split(",").map((field) => field.trim())
-      : OrganizationMemberFields;
+      : PersonalInventoryItemFields;
 
     console.log("Selected Fields:", selectedFields);
 
     const invalidFields = selectedFields.filter(
-      (field) => !OrganizationMemberFields.includes(field)
+      (field) => !PersonalInventoryItemFields.includes(field)
     );
     if (invalidFields.length > 0) {
       return NextResponse.json(
@@ -49,46 +46,38 @@ export async function GET(
       );
     }
 
-    const selectClause = selectedFields.join(", ");
-
     const conditions: string[] = [];
     const filter_params: any[] = [];
 
-    conditions.push("User_ID = ?");
-    filter_params.push(params.userID);
-
-    if (filters.id) {
-      conditions.push("ID = ?");
-      filter_params.push(filters.id);
-    }
-
-    if (filters.role) {
-      conditions.push("Role = ?");
-      filter_params.push(filters.role);
-    }
-
-    if (filters.organization_code) {
-      conditions.push("Organization_Code = ?");
-      filter_params.push(filters.organization_code);
-    }
+    conditions.push("Personal_Inventory_ID = ?");
+    filter_params.push(params.personalInventoryID);
 
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-    const sql = `SELECT ${selectClause} FROM User ${whereClause}`;
+    const selectClause = selectedFields.join(", ");
+
+    const sql = `
+        SELECT ${selectClause}
+        FROM Personal_Inventory_Item
+        ${whereClause}`;
 
     console.log("SQL Query:", sql);
     console.log("Query Params:", filter_params);
+    
 
-    const groupMembers = await queryDatabase<any[]>(sql, filter_params);
-    console.log("Database Results:", groupMembers);
+    const personalInventoryItems = await queryDatabase<any[]>(
+      sql,
+      filter_params
+    );
+    console.log("Database Results:", personalInventoryItems);
 
-    const validatedUsers = selectedFields.includes("*")
-      ? groupMembers.map((groupMember) =>
-          OrganizationMemberSchema["full"].parse(groupMember)
+    const validatedGroups = selectedFields.includes("*")
+      ? personalInventoryItems.map((personalInventoryItem) =>
+          PersonalInventoryItemSchema["full"].parse(personalInventoryItem)
         )
-      : groupMembers.map((groupMember) => {
-          const schema = OrganizationMemberSchema["full"];
+      : personalInventoryItems.map((personalInventoryItem) => {
+          const schema = PersonalInventoryItemSchema["full"];
           return z
             .object(
               selectedFields.reduce((acc, field) => {
@@ -99,10 +88,10 @@ export async function GET(
                 return acc;
               }, {} as z.ZodRawShape)
             )
-            .parse(groupMember);
+            .parse(personalInventoryItem);
         });
 
-    return NextResponse.json(validatedUsers);
+    return NextResponse.json(validatedGroups);
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error("Validation error:", error.errors);
@@ -112,7 +101,7 @@ export async function GET(
       );
     }
 
-    console.error("Error fetching users:", error);
+    console.error("Error fetching organizations:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }

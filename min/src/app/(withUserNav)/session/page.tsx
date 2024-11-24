@@ -20,7 +20,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <div className="max-w-4xl mx-auto mt-8">
+      <div className="max-w-4xl mx-auto mt-3">
         <h1 className="text-3xl font-semibold mb-4">Profile</h1>
         <div className="flex gap-8 items-center">
           <Image

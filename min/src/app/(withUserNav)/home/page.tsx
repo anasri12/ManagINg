@@ -13,7 +13,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="flex justify-center font-inria text-[78px] mt-5">
+      <div className="flex justify-center font-inria text-[78px]">
         <div className="flex flex-col justify-center items-center">
           <div>Better management</div>
           <div>is better life.</div>

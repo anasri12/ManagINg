@@ -1,7 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ["files.edgestore.dev"], // Add the domain for external images
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "files.edgestore.dev", // Add the domain for external images
+            },
+        ],
     },
     redirects: async () => [
         {

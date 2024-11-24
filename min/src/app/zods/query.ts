@@ -32,3 +32,8 @@ export const QueryPersonalInventorySchema = z.object({
   owner_id: z.string().optional().nullable(),
   fields: z.string().optional().nullable(),
 });
+
+export const QueryCollaborationSchema = z.object({
+  status: z.enum(["Pending", "Accepted", "Rejected"]).optional().nullable(),
+  fields: z.string().optional().nullable(),
+});

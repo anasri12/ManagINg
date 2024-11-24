@@ -29,7 +29,7 @@ export const OrganizationMemberSchema = {
   patch: PatchOrganizationMemberSchema,
 };
 
-export interface OrganizationInterface {
+export interface OrganizationMemberInterface {
   full: FullOrganizationMemberInterface;
   post: PostOrganizationMemberInterface;
   patch: PatchOrganizationMemberInterface;

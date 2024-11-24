@@ -13,8 +13,11 @@ export default async function RootLayout({
 
   return (
     <>
-      <GroupNavBar session={session} groupID={params.groupID} />
-      <main className="h-screen w-full overflow-hidden flex flex-col">
+      <div className="fixed top-0 left-0 w-full z-50">
+        <GroupNavBar session={session} groupID={params.groupID} />
+      </div>
+      <main className="pt-[64px] h-screen w-full overflow-hidden flex flex-col">
+        <div className="mb-5"></div>
         {children}
       </main>
     </>
