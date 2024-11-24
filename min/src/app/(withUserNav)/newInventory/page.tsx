@@ -9,6 +9,8 @@ import { useState } from "react";
 
 const NewInventory = () => {
   const { data: session, status } = useSession();
+  const router = useRouter();
+
   const [inventoryName, setinventoryName] = useState<string>("");
   const [description, setdescription] = useState<string>("");
   const [colabWith, setcolabWith] = useState<string>("");
@@ -17,7 +19,6 @@ const NewInventory = () => {
     "Amount", // Default required columns
   ]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const router = useRouter();
 
   const handleCheckboxChange = (column: string) => {
     setSelectedColumns((prev) =>
@@ -25,6 +26,15 @@ const NewInventory = () => {
         ? prev.filter((col) => col !== column)
         : [...prev, column]
     );
+  };
+  const handleCreateInventory = () => {
+    const queryString = new URLSearchParams({
+      name: inventoryName,
+      description: description,
+      colabUsers: colabWith,
+    }).toString();
+
+    router.push(`/myInventory?${queryString}`);
   };
 
   if (status === "loading") {
