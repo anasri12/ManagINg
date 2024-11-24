@@ -11,8 +11,10 @@ export default async function RootLayout({
   }
   return (
     <>
-      <AdminNavBar session={session} />
-      <main className="h-screen w-full overflow-hidden flex flex-col">
+      <div className="fixed top-0 left-0 w-full z-50">
+        <AdminNavBar session={session} />
+      </div>
+      <main className="pt-[64px] h-screen w-full overflow-hidden flex flex-col">
         {children}
       </main>
     </>
