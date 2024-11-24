@@ -10,9 +10,13 @@ const NewInventory = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [inventoryName, setinventoryName] = useState<string>("");
-  const [description, setdescription] = useState<string>("");
-  const [colabWith, setcolabWith] = useState<string>("");
+  const [inventoryName, setInventoryName] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [colabUsername, setColabUsername] = useState<string>(""); // Input for collaborator username
+  const [colabPermission, setColabPermission] = useState<string>("View"); // Default permission
+  const [colabArray, setColabArray] = useState<
+    { username: string; permission: string }[]
+  >([]);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([
     "Name",
     "Amount", // Default required columns
@@ -25,7 +29,22 @@ const NewInventory = () => {
         ? prev.filter((col) => col !== column)
         : [...prev, column]
     );
-    console.log(selectedColumns);
+  };
+
+  const handleColabKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && colabUsername.trim() !== "") {
+      setColabArray((prev) => [
+        ...prev,
+        { username: colabUsername.trim(), permission: colabPermission },
+      ]);
+      setColabUsername(""); // Clear input field
+      setColabPermission("View"); // Reset permission to default
+      e.preventDefault(); // Prevent form submission
+    }
+  };
+
+  const removeCollaborator = (index: number) => {
+    setColabArray((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -37,35 +56,72 @@ const NewInventory = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(
-        `/api/users/${session.user.id}/personalInventories`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            Name: inventoryName,
-            Description: description || null,
-            Owner_ID: session.user.id,
-            Input_Enable: { Enable: selectedColumns },
-            UpdatedBy: session.user.id,
-          }),
+      // Step 1: Create the inventory
+      if (session) {
+        const inventoryResponse = await fetch(
+          `/api/users/${session.user.id}/personalInventories`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              Name: inventoryName,
+              Description: description || null,
+              Owner_ID: session.user.id,
+              Input_Enable: { Enable: selectedColumns },
+              UpdatedBy: session.user.id,
+            }),
+          }
+        );
+
+        if (!inventoryResponse.ok) {
+          const errorData = await inventoryResponse.json();
+          console.error("Error creating inventory:", errorData);
+          alert("Failed to create inventory: " + errorData.message);
+          return;
         }
-      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error creating inventory:", errorData);
-        alert("Failed to create inventory: " + errorData.message);
-        return;
+        const inventoryResult = await inventoryResponse.json();
+        const inventoryID = inventoryResult.inventoryID;
+        console.log("Inventory created successfully:", inventoryID);
+
+        // Step 2: Send collaboration invitations
+        for (const collaborator of colabArray) {
+          const collaborationResponse = await fetch(
+            `/api/users/${session.user.id}/collaborations`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                Permission: collaborator.permission,
+                Status: "Pending", // Default status for new invitations
+                Inventory_ID: inventoryID,
+                Owner_ID: session.user.id,
+                Collaborator_Username: collaborator.username,
+              }),
+            }
+          );
+
+          if (!collaborationResponse.ok) {
+            const errorData = await collaborationResponse.json();
+            console.error("Error creating collaboration:", errorData);
+            alert(
+              `Failed to send invitation to ${collaborator.username}: ${errorData.message}`
+            );
+            continue;
+          }
+
+          console.log(
+            `Collaboration invitation sent to ${collaborator.username}.`
+          );
+        }
+
+        // Redirect to the inventory page
+        router.push(`/myInventory/${inventoryID}`);
       }
-
-      const result = await response.json();
-      console.log("Inventory created successfully:", result);
-
-      // Redirect to the inventory list or the newly created inventory
-      router.push(`/myInventory`);
     } catch (error) {
       console.error("Unexpected error:", error);
       alert("An unexpected error occurred. Please try again.");
@@ -84,12 +140,12 @@ const NewInventory = () => {
         New / Create Inventory
       </div>
       <div className="font-roboto font-normal mt-16 text-xl pl-36 ">
-        <div className="flex gap-4 ">
+        <div className="flex gap-4">
           <label className=" text-gray-950">Name of inventory</label>
           <input
             type="text"
             value={inventoryName}
-            onChange={(e) => setinventoryName(e.target.value)}
+            onChange={(e) => setInventoryName(e.target.value)}
             className="w-80 h-9 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
             required
           />
@@ -99,9 +155,52 @@ const NewInventory = () => {
           <input
             type="text"
             value={description}
-            onChange={(e) => setdescription(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
             className="w-96 h-9 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
           />
+        </div>
+        <div className="flex gap-4 mt-6">
+          <label className=" text-gray-950">Collaborators</label>
+          <div>
+            <input
+              type="text"
+              value={colabUsername}
+              onChange={(e) => setColabUsername(e.target.value)}
+              onKeyDown={handleColabKeyPress}
+              placeholder="Enter username"
+              className="w-80 h-9 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
+            />
+            <select
+              value={colabPermission}
+              onChange={(e) => setColabPermission(e.target.value)}
+              className="ml-4 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
+            >
+              <option value="View">View</option>
+              <option value="Edit">Edit</option>
+            </select>
+          </div>
+        </div>
+        <div className="mt-4">
+          {colabArray.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {colabArray.map((collaborator, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 px-3 py-1 bg-gray-200 rounded-md"
+                >
+                  <span>
+                    {collaborator.username} ({collaborator.permission})
+                  </span>
+                  <button
+                    onClick={() => removeCollaborator(index)}
+                    className="text-red-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex gap-4 mt-6">
           <label className=" text-gray-950">Enable input (column)</label>

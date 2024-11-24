@@ -3,6 +3,7 @@ import { queryDatabase } from "@/app/utils/db";
 import { PersonalInventoryItemFields } from "@/app/utils/mapfields/personalInventoryItem";
 import { PersonalInventoryItemSchema } from "@/app/zods/db/personalInventoryItem";
 import { QueryOnlySchema } from "@/app/zods/query";
+import { ResultSetHeader } from "mysql2/promise";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -107,6 +108,104 @@ export async function GET(
     }
 
     console.error("Error fetching organizations:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { userID: string; personalInventoryID: number } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    // Verify user session
+    if (!session || session.user.id !== params.userID) {
+      return NextResponse.json({ message: "Access Denied" }, { status: 403 });
+    }
+
+    // Parse and validate request body
+    const body = await req.json();
+    const parsedBody = PersonalInventoryItemSchema["post"].parse(body);
+    console.log(parsedBody);
+
+    // Construct SQL query and params
+    const sql = `
+      INSERT INTO Personal_Inventory_Item (
+        Personal_Inventory_ID,
+        Name,
+        Description,
+        Bought_From,
+        Current_Used_Day,
+        Brand,
+        Price,
+        Bought_Date,
+        EXP_BFF_Date,
+        Picture_URL,
+        Amount,
+        Guarantee_Period,
+        CreatedBy,
+        UpdatedBy
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    console.log(sql);
+
+    const queryParams = [
+      params.personalInventoryID,
+      parsedBody.Name,
+      parsedBody.Description,
+      parsedBody.Bought_From,
+      parsedBody.Current_Used_Day,
+      parsedBody.Brand,
+      parsedBody.Price,
+      parsedBody.Bought_Date,
+      parsedBody.EXP_BFF_Date,
+      parsedBody.Picture_URL,
+      parsedBody.Amount,
+      parsedBody.Guarantee_Period,
+      parsedBody.CreatedBy,
+      parsedBody.UpdatedBy,
+    ];
+    console.log(queryParams);
+
+    // Execute the query
+    const result = await queryDatabase<ResultSetHeader>(sql, queryParams);
+
+    if (Array.isArray(result)) {
+      throw new Error(
+        "Unexpected query result: Expected a ResultSetHeader, but got an array."
+      );
+    }
+
+    // Check result
+    if (result.affectedRows === 1) {
+      return NextResponse.json(
+        {
+          message: "Inventory item created successfully",
+          itemID: result.insertId, // Newly created inventory item ID
+        },
+        { status: 201 }
+      );
+    } else {
+      return NextResponse.json(
+        { message: "Failed to create inventory item" },
+        { status: 500 }
+      );
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.errors);
+      return NextResponse.json(
+        { message: "Validation failed", errors: error.errors },
+        { status: 400 }
+      );
+    }
+
+    console.error("Error creating inventory item:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }
