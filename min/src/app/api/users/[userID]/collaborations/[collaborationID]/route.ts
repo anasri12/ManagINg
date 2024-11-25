@@ -62,7 +62,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
+export async function PUT(
   req: NextRequest,
   { params }: { params: { userID: string; collaborationID: string } }
 ) {

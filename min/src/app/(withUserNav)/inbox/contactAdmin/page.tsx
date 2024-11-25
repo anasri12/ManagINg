@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { ReportInterface } from "@/app/zods/db/report";
 import Loading from "@/components/general/Loading";
+import { fetchWithLogging } from "@/app/utils/log";
 
 interface Message {
   id: number;
@@ -17,34 +18,36 @@ interface Message {
 }
 
 export default function ContactAdmin() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const userID = session?.user.id;
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const userID = session?.user.id;
 
   useEffect(() => {
     const fetchMessages = async () => {
       if (!userID) return;
 
       try {
-        const response = await fetch(`/api/users/${userID}/reports`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch messages.");
-        }
+        const contacts = await fetchWithLogging<ReportInterface["full"][]>(
+          `/api/users/${userID}/reports`,
+          { method: "GET" },
+          userID
+        );
+        console.log(contacts);
 
-        const data = await response.json();
-        const formattedMessages = data.map((msg: ReportInterface["full"]) => ({
-          id: msg.ID,
-          content: msg.Message,
-          status: msg.Status,
-          sentDate: new Date(msg.CreatedAt).toLocaleString(),
-          resolvedAt: msg.ResolvedAt
-            ? new Date(msg.ResolvedAt).toLocaleString()
-            : null,
-          response: msg.Response,
-        }));
+        const formattedMessages = contacts.map(
+          (msg: ReportInterface["full"]) => ({
+            id: msg.ID,
+            content: msg.Message,
+            status: msg.Status,
+            sentDate: new Date(msg.CreatedAt).toLocaleString(),
+            resolvedAt: msg.ResolvedAt
+              ? new Date(msg.ResolvedAt).toLocaleString()
+              : null,
+            response: msg.Response,
+          })
+        );
         setMessages(formattedMessages);
       } catch (error) {
         console.error("Error fetching messages:", error);
@@ -59,33 +62,22 @@ export default function ContactAdmin() {
   const handleSubmit = async () => {
     if (message.trim() === "") return;
 
+    if (!userID) return;
     try {
-      const response = await fetch(`/api/users/${userID}/reports`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          User_ID: userID,
-          Message: message,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to submit the message.");
-      }
-
-      const newMessage = await response.json();
-      setMessages((prevMessages) => [
+      const newContact = await fetchWithLogging(
+        `/api/users/${userID}/reports`,
         {
-          id: newMessage.reportID,
-          content: message,
-          status: "Open",
-          sentDate: new Date().toLocaleString(),
+          method: "POST",
+          body: {
+            User_ID: userID,
+            Message: message,
+          },
         },
-        ...prevMessages,
-      ]);
-      setMessage("");
+        userID
+      );
+
+      console.log(newContact);
+      window.location.reload();
     } catch (error) {
       console.error("Error submitting message:", error);
     }

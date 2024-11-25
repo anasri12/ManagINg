@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { fetchWithLogging } from "@/app/utils/log";
 
 export default function ChangePassword() {
   const { data: session } = useSession();
+  const userID = session?.user.id;
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,27 +24,21 @@ export default function ChangePassword() {
     }
 
     try {
-      if (session) {
-        const response = await fetch(`/api/users/${session?.user.id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+      if (!userID) return;
+      const response = await fetchWithLogging(
+        `/api/users/${userID}`,
+        {
+          method: "PUT",
+          body: {
             Current_Password: currentPassword, // Used for validation in the backend
             Password: newPassword, // Updates the user's password
-          }),
-        });
+          },
+        },
+        userID
+      );
 
-        const data = await response.json();
-
-        if (response.ok) {
-          alert("Password changed successfully.");
-          router.push("/profile"); // Redirect to the profile page
-        } else {
-          alert(data.message || "Failed to change password.");
-        }
-      }
+      alert("Password changed successfully.");
+      router.push("/profile"); // Redirect to the profile page
     } catch (error) {
       console.error("Error changing password:", error);
       alert("An error occurred. Please try again.");

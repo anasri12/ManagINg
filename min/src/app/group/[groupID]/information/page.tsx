@@ -1,6 +1,5 @@
 "use client";
 
-import { OrganizationInterface } from "@/app/zods/db/organization";
 import { OrganizationWithMemberInterface } from "@/app/zods/db/subquery/organizationWithMember";
 import Loading from "@/components/general/Loading";
 import { useSession } from "next-auth/react";
