@@ -154,17 +154,15 @@ export default function MySelectInventory({
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <DataTable
-        session={session}
-        columns={dynamicColumns}
-        data={inventoryItems}
-        title={header}
-        apiUrl={`/api/users/${session?.user.id}/personalInventories/${params.myInventoryID}/personalInventoryItems`}
-        formFields={inputFields}
-        userID={userID!}
-        inventoryID={params.myInventoryID}
-      />
-    </div>
+    <DataTable
+      session={session}
+      columns={dynamicColumns}
+      data={inventoryItems}
+      title={header}
+      apiUrl={`/api/users/${session?.user.id}/personalInventories/${params.myInventoryID}/personalInventoryItems`}
+      formFields={inputFields}
+      userID={userID!}
+      inventoryID={params.myInventoryID}
+    />
   );
 }

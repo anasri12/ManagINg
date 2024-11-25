@@ -55,9 +55,11 @@ export default function Users() {
 
       {/* Navigation Tabs */}
       <div className="flex gap-4 mb-6">
-        <Button className="bg-red-600 text-white hover:bg-red-700 px-6 py-2">
-          Users
-        </Button>
+        <Link href="/admin/management">
+          <Button className="bg-red-600 text-white hover:bg-red-700 px-6 py-2">
+            Users
+          </Button>
+        </Link>
         <Link href="/admin/management/collaboration">
           <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
             Collaboration

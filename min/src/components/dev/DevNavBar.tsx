@@ -21,14 +21,14 @@ export default function DevNavBar({ session }: { session: Session | null }) {
         <NavigationMenu className="pt-2 pl-12">
           <NavigationMenuList>
             <NavigationMenuItem>
-              <Link href="/APIUsage" legacyBehavior passHref>
+              <Link href="/dev/apiUsage" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   API Uasge
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/InboxDev" legacyBehavior passHref>
+              <Link href="/dev/inboxDev" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Inbox
                 </NavigationMenuLink>

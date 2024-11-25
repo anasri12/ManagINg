@@ -17,7 +17,7 @@ interface Message {
   };
 }
 
-export default function AdminInbox() {
+export default function DevInbox() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -83,18 +83,13 @@ export default function AdminInbox() {
   return (
     <div className="container mx-28 py-6 px-6">
       {/* Header */}
-      <div className="font-inria text-5xl mb-8">Admin Inbox</div>
+      <div className="font-inria text-5xl mb-8">Inbox</div>
 
       {/* Navigation Tabs */}
       <div className="flex gap-4 mb-6">
         <Button className="bg-red-600 text-white hover:bg-red-700 px-6 py-2">
-          Report / question from Users
+          Report / question from admin
         </Button>
-        <Link href="/admin/inboxAdmin/contactDev">
-          <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
-            Contact Developer
-          </Button>
-        </Link>
       </div>
 
       {/* Messages Section */}
