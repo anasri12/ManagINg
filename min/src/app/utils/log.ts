@@ -1,4 +1,5 @@
 import { LogInterface } from "../zods/db/log";
+import fetch, { RequestInit } from "node-fetch";
 
 async function logAPIUsage(payload: LogInterface["post"]) {
   try {
