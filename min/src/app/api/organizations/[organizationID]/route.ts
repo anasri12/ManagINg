@@ -10,15 +10,19 @@ import { QueryOnlySchema } from "@/app/zods/query";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { isMemberOfOrganization, RoleOfOrganization } from "../utils";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userID: string; organizationID: string } }
+  { params }: { params: { organizationID: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.id !== params.userID) {
+    if (
+      !session ||
+      !(await isMemberOfOrganization(params.organizationID, session.user.id))
+    ) {
       return NextResponse.json({ message: "Access Denied" }, { status: 403 });
     }
 
@@ -56,9 +60,6 @@ export async function GET(
 
     const conditions: string[] = [];
     const filter_params: any[] = [];
-
-    conditions.push("gm.User_ID = ?");
-    filter_params.push(params.userID);
 
     conditions.push("g.Code = ?");
     filter_params.push(params.organizationID);
@@ -124,18 +125,23 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { userID: string; organizationID: string } }
+  { params }: { params: { organizationID: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.id !== params.userID) {
+    if (
+      !session ||
+      ((await RoleOfOrganization(params.organizationID, session.user.id)) !==
+        "Admin" &&
+        (await RoleOfOrganization(params.organizationID, session.user.id)) !==
+          "Founder")
+    ) {
       return NextResponse.json({ message: "Access Denied" }, { status: 403 });
     }
 
     const body = await req.json();
 
-    // Validate the request body
     const parsedBody = OrganizationSchema["patch"].parse(body);
 
     if (!parsedBody || Object.keys(parsedBody).length === 0) {
@@ -153,7 +159,6 @@ export async function PUT(
       values.push(value);
     }
 
-    // Add the organization ID to the query parameters
     values.push(params.organizationID);
 
     const sql = `
@@ -196,12 +201,18 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { userID: string; organizationID: string } }
+  { params }: { params: { organizationID: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.id !== params.userID) {
+    if (
+      !session ||
+      ((await RoleOfOrganization(params.organizationID, session.user.id)) !==
+        "Admin" &&
+        (await RoleOfOrganization(params.organizationID, session.user.id)) !==
+          "Founder")
+    ) {
       return NextResponse.json({ message: "Access Denied" }, { status: 403 });
     }
 

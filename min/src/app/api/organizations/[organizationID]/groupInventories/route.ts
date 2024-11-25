@@ -7,25 +7,7 @@ import { GroupInventorySchema } from "@/app/zods/db/groupInventory";
 import { OrganizationIDSchema } from "@/app/zods/params";
 import { OrganizationMemberInterface } from "@/app/zods/db/organizationMember";
 import { ResultSetHeader } from "mysql2";
-
-async function isMemberOfOrganization(organizationID: string, userID: string) {
-  const sql = `
-    FROM OrganizationMembers 
-    WHERE Organization_ID = ? AND User_ID = ?
-  `;
-  const result = await queryDatabase<OrganizationMemberInterface>(sql, [
-    organizationID,
-    userID,
-  ]);
-
-  if (!Array.isArray(result)) {
-    throw new Error(
-      "Unexpected query result: Expected an array, but got a ResultSetHeader."
-    );
-  }
-
-  return result.length > 0;
-}
+import { isMemberOfOrganization } from "../../utils";
 
 export async function GET(
   req: NextRequest,
@@ -46,8 +28,8 @@ export async function GET(
     // Fetch group inventories
     const sql = `
       SELECT * 
-      FROM GroupInventories 
-      WHERE Organization_ID = ?
+      FROM Group_Inventory 
+      WHERE Organization_Code = ?
     `;
     const groupInventories = await queryDatabase(sql, [organizationID]);
 

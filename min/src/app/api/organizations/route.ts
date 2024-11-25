@@ -10,14 +10,11 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { userID: string } }
-) {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.id !== params.userID) {
+    if (!session || session.user.role !== "Admin") {
       return NextResponse.json({ message: "Access Denied" }, { status: 403 });
     }
 
@@ -55,9 +52,6 @@ export async function GET(
 
     const conditions: string[] = [];
     const filter_params: any[] = [];
-
-    conditions.push("gm.User_ID = ?");
-    filter_params.push(params.userID);
 
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -117,23 +111,18 @@ export async function GET(
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { userID: string } }
-) {
+export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.id !== params.userID) {
+    if (!session) {
       return NextResponse.json({ message: "Access Denied" }, { status: 403 });
     }
 
     const body = await req.json();
 
-    // Validate the request body using the appropriate schema
     const parsedBody = OrganizationSchema["post"].parse(body);
 
-    // Generate a unique 20-character alphanumeric code for the organization
     const generateOrganizationCode = () => {
       const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
       let code = "";
@@ -145,7 +134,6 @@ export async function POST(
 
     let organizationCode = generateOrganizationCode();
 
-    // Ensure the code is unique by checking the database
     let isUnique = false;
     const sqlCheckCode = `SELECT COUNT(*) AS count FROM Organization WHERE Code = ?`;
 
@@ -161,7 +149,6 @@ export async function POST(
       }
     }
 
-    // Insert the organization into the database
     const sqlInsertOrganization = `
         INSERT INTO Organization (Code, Name, Description, CreatedAt, UpdatedAt)
         VALUES (?, ?, ?, NOW(), NOW())

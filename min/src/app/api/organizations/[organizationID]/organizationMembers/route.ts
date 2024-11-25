@@ -6,15 +6,19 @@ import { QueryOrganizationMemberSchema } from "@/app/zods/query";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { isMemberOfOrganization } from "../../utils";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userID: string; organizationID: number } }
+  { params }: { params: { organizationID: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.id !== params.userID) {
+    if (
+      !session ||
+      !(await isMemberOfOrganization(params.organizationID, session.user.id))
+    ) {
       return NextResponse.json({ message: "Access Denied" }, { status: 403 });
     }
 
@@ -59,11 +63,6 @@ export async function GET(
     if (filters.id) {
       conditions.push("ID = ?");
       filter_params.push(filters.id);
-    }
-
-    if (filters.role) {
-      conditions.push("Role = ?");
-      filter_params.push(filters.role);
     }
 
     const whereClause =
@@ -122,13 +121,16 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { userID: string; organizationID: number } }
+  { params }: { params: { organizationID: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
 
     // Ensure the session user is authorized
-    if (!session || session.user.id !== params.userID) {
+    if (
+      !session ||
+      !(await isMemberOfOrganization(params.organizationID, session.user.id))
+    ) {
       return NextResponse.json({ message: "Access Denied" }, { status: 403 });
     }
 
