@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     const selectClause = selectedFields.join(", ");
 
     const conditions: string[] = [];
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (filters.role) {
       conditions.push("Role = ?");
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     console.log("SQL Query:", sql);
     console.log("Query Params:", params);
 
-    const users = await queryDatabase<any>(sql, params);
+    const users = await queryDatabase<unknown>(sql, params);
     console.log("Database Results:", users);
 
     if (!Array.isArray(users)) {

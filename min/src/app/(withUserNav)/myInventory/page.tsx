@@ -64,13 +64,28 @@ export default function MyInventory() {
   }
 
   // Handle inventory deletion
-  const handleDelete = (personalInventoryID: number) => {
+  const handleDelete = async (personalInventoryID: number) => {
     const confirmed = confirm(
       "Are you sure you want to delete this inventory?"
     );
     if (confirmed) {
-      // Add deletion logic here
-      console.log(`Delete inventory ID: ${personalInventoryID}`);
+      try {
+        const response = await fetch(
+          `/api/users/${session?.user.id}/personalInventories/${personalInventoryID}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to delete inventory");
+        }
+
+        window.location.reload();
+      } catch (error) {
+        console.error("Error deleting inventory:", error);
+        alert("Failed to delete inventory. Please try again.");
+      }
     }
   };
 
@@ -117,48 +132,66 @@ export default function MyInventory() {
 
           <TableBody>
             {filteredData.length > 0 ? (
-              filteredData.map((PersonalInventory) => (
+              filteredData.map((personalInventory) => (
                 <TableRow
-                  key={PersonalInventory.ID}
-                  className="cursor-pointer hover:bg-gray-100"
+                  key={personalInventory.ID}
+                  className={`cursor-pointer hover:bg-gray-100 ${
+                    session?.user.id !== personalInventory.Owner_ID
+                      ? "bg-red-100"
+                      : ""
+                  }`}
                   onClick={() =>
-                    router.push(`/myInventory/${PersonalInventory.ID}`)
+                    router.push(`/myInventory/${personalInventory.ID}`)
                   }
                 >
-                  <TableCell>{PersonalInventory.ID}</TableCell>
-                  <TableCell>{PersonalInventory.Name}</TableCell>
+                  <TableCell>{personalInventory.ID}</TableCell>
+                  <TableCell>{personalInventory.Name}</TableCell>
                   <TableCell>
-                    {PersonalInventory.Collaborator_Username.length !== 0 ? (
+                    {personalInventory.Collaborator_Username.length !== 0 ? (
                       <>
-                        {PersonalInventory.Collaborator_Username.map(
-                          (collaborator) => (
-                            <div>{collaborator}</div>
+                        {personalInventory.Collaborator_Username.map(
+                          (collaborator, index) => (
+                            <div key={index}>{collaborator}</div>
                           )
                         )}
                       </>
                     ) : (
-                      <>
-                        <div>-</div>
-                      </>
+                      <div>-</div>
                     )}
                   </TableCell>
-                  <TableCell>{PersonalInventory.Description}</TableCell>
+                  <TableCell>{personalInventory.Description}</TableCell>
                   <TableCell>
-                    {PersonalInventory.UpdatedAt
-                      ? format(new Date(PersonalInventory.UpdatedAt), "PPP p")
+                    {personalInventory.UpdatedAt
+                      ? format(new Date(personalInventory.UpdatedAt), "PPP p")
                       : "N/A"}
                   </TableCell>
-                  <TableCell>{PersonalInventory.UpdatedBy_Username}</TableCell>
+                  <TableCell>{personalInventory.UpdatedBy_Username}</TableCell>
                   <TableCell
                     onClick={(e) => e.stopPropagation()} // Prevent row click from triggering navigation
                   >
-                    <Button
-                      variant="outline"
-                      onClick={() => handleDelete(PersonalInventory.ID)}
-                      className="text-red-600 border-red-600"
-                    >
-                      Delete
-                    </Button>
+                    <div className="flex gap-2">
+                      {/* Edit Button */}
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          router.push(
+                            `/myInventory/${personalInventory.ID}/edit`
+                          )
+                        }
+                        className="text-blue-600 border-blue-600"
+                      >
+                        Edit
+                      </Button>
+
+                      {/* Delete Button */}
+                      <Button
+                        variant="outline"
+                        onClick={() => handleDelete(personalInventory.ID)}
+                        className="text-red-600 border-red-600"
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

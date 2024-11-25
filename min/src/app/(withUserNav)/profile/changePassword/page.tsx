@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // Use router for redirection
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function ChangePassword() {
+  const { data: session } = useSession();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,25 +22,26 @@ export default function ChangePassword() {
     }
 
     try {
-      // Make an API call to verify the old password and update the new password
-      const response = await fetch("/api/change-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-        }),
-      });
+      if (session) {
+        const response = await fetch(`/api/users/${session?.user.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            Current_Password: currentPassword, // Used for validation in the backend
+            Password: newPassword, // Updates the user's password
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok) {
-        alert("Password changed successfully.");
-        router.push("/profile"); // Redirect to the profile page
-      } else {
-        alert(data.message || "Failed to change password.");
+        if (response.ok) {
+          alert("Password changed successfully.");
+          router.push("/profile"); // Redirect to the profile page
+        } else {
+          alert(data.message || "Failed to change password.");
+        }
       }
     } catch (error) {
       console.error("Error changing password:", error);
