@@ -121,7 +121,7 @@ export default function SideBar({
             <></>
           )}
 
-          <Link href={"/addGroup"} className="mb-2">
+          <Link href={"/newGroup"} className="mb-2">
             Add/Create Group
           </Link>
           <SignOutButton />
