@@ -37,7 +37,7 @@ export default function UserInbox() {
   return (
     <div className="container mx-28 py-6 px-6">
       {/* Header */}
-      <div className="font-inria text-5xl font-bold mb-8">Admin Inbox</div>
+      <div className="font-inria text-5xl mb-8">Admin Inbox</div>
 
       {/* Navigation Tabs */}
       <div className="flex gap-4 mb-6">
