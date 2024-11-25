@@ -7,6 +7,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import Loading from "@/components/general/Loading";
 import { PersonalInventoryItemInterface } from "@/app/zods/db/personalInventoryItem";
 import { PersonalInventoryInterface } from "@/app/zods/db/personalInventory";
+import { fetchWithLogging } from "@/app/utils/log";
 
 export default function MySelectInventory({
   params,
@@ -28,30 +29,26 @@ export default function MySelectInventory({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (session) {
-          const inventoryResponse = await fetch(
-            `/api/users/${userID}/personalInventories/${params.myInventoryID}`
-          );
+        if (!userID) return;
+        const personalInventoryData = await fetchWithLogging<
+          PersonalInventoryInterface["full"][]
+        >(
+          `/api/users/${userID}/personalInventories/${params.myInventoryID}`,
+          { method: "GET" },
+          userID
+        );
 
-          if (!inventoryResponse.ok) {
-            throw new Error(
-              `Error fetching inventory: ${inventoryResponse.statusText}`
-            );
-          }
+        const header = personalInventoryData[0].Name ?? "My Inventory";
+        const enable = personalInventoryData[0].Input_Enable.Enable ?? [];
+        if (!Array.isArray(enable)) {
+          throw new Error("'enable' property is missing or not an array");
+        }
 
-          const inventoryData =
-            (await inventoryResponse.json()) as PersonalInventoryInterface["full"][];
+        setHeader(header);
+        setInputFields(enable);
 
-          const enable = inventoryData[0]?.Input_Enable?.Enable ?? [];
-          if (!Array.isArray(enable)) {
-            throw new Error("'enable' property is missing or not an array");
-          }
-
-          setInputFields(enable);
-
-          const allColumns: ColumnDef<
-            PersonalInventoryItemInterface["full"]
-          >[] = [
+        const allColumns: ColumnDef<PersonalInventoryItemInterface["full"]>[] =
+          [
             { id: "ID", header: "ID", cell: ({ row }) => row.original.ID },
             {
               id: "Name",
@@ -110,36 +107,22 @@ export default function MySelectInventory({
             },
           ];
 
-          const filteredColumns = allColumns.filter((col) =>
-            enable.includes(col.id ?? "")
-          );
+        const filteredColumns = allColumns.filter((col) =>
+          enable.includes(col.id ?? "")
+        );
 
-          setDynamicColumns(filteredColumns);
+        setDynamicColumns(filteredColumns);
 
-          const headerResponse = await fetch(
-            `/api/users/${userID}/personalInventories/${params.myInventoryID}`
-          );
+        const personalInventoryItemData = await fetchWithLogging<
+          PersonalInventoryItemInterface["full"][]
+        >(
+          `/api/users/${userID}/personalInventories/${params.myInventoryID}/personalInventoryItems`,
+          { method: "GET" },
+          userID
+        );
 
-          const itemsResponse = await fetch(
-            `/api/users/${userID}/personalInventories/${params.myInventoryID}/personalInventoryItems`
-          );
-
-          if (!itemsResponse.ok || !headerResponse.ok) {
-            throw new Error(
-              `Error fetching header & items: ${itemsResponse.statusText}`
-            );
-          }
-
-          const itemsData =
-            (await itemsResponse.json()) as PersonalInventoryItemInterface["full"][];
-          const headerData =
-            (await headerResponse.json()) as PersonalInventoryInterface["full"][];
-
-          setInventoryItems(itemsData);
-          setHeader(headerData[0].Name);
-
-          setLoading(false);
-        }
+        setInventoryItems(personalInventoryItemData);
+        setLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);
         setLoading(false);

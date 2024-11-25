@@ -14,6 +14,8 @@ const FullCollaborationSchema = z.object({
   ResolvedAt: z.date().nullable(),
 });
 
+const QueryCollaborationSchema = FullCollaborationSchema.partial();
+
 const PostCollaborationSchema = z.object({
   Permission: z.enum(["View", "Edit"]),
   Status: z.enum(["Pending", "Accepted", "Rejected"]).optional(),
@@ -32,18 +34,22 @@ const PatchCollaborationSchema = PostCollaborationSchema.pick({
 
 type FullCollaborationInterface = z.infer<typeof FullCollaborationSchema>;
 
+type QueryCollaborationInterface = z.infer<typeof QueryCollaborationSchema>;
+
 type PostCollaborationInterface = z.infer<typeof PostCollaborationSchema>;
 
 type PatchCollaborationInterface = z.infer<typeof PatchCollaborationSchema>;
 
 export const CollaborationSchema = {
   full: FullCollaborationSchema,
+  query: QueryCollaborationSchema,
   post: PostCollaborationSchema,
   patch: PatchCollaborationSchema,
 };
 
 export interface CollaborationInterface {
   full: FullCollaborationInterface;
+  query: QueryCollaborationInterface;
   post: PostCollaborationInterface;
   patch: PatchCollaborationInterface;
 }

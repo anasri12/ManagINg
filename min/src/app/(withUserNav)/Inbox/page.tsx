@@ -6,38 +6,30 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import Loading from "@/components/general/Loading";
+import { fetchWithLogging } from "@/app/utils/log";
+import { CollaborationInterface } from "@/app/zods/db/collaboration";
 
 export default function Inbox() {
   const { data: session } = useSession();
   const userID = session?.user.id;
 
   const [loading, setLoading] = useState(true);
-  const [inboxes, setInboxes] = useState<
-    {
-      ID: number;
-      Permission?: "View" | "Edit";
-      Status?: "Pending" | "Accepted" | "Rejected";
-      ResolvedAt?: Date;
-      Inventory_Name: string;
-      Collaborator_Username: string;
-      Owner_Username: string;
-      Owner_ID: string;
-    }[]
-  >([]);
+  const [inboxes, setInboxes] = useState<CollaborationInterface["full"][]>([]);
 
   useEffect(() => {
     const fetchInventories = async () => {
       try {
-        if (session) {
-          const response = await fetch(
-            `/api/users/${userID}/collaborations?order=DESC`
-          );
-          if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
-          }
-          const data = await response.json();
-          setInboxes(data);
-        }
+        if (!userID) return;
+        const collaborationInbox = await fetchWithLogging<
+          CollaborationInterface["full"][]
+        >(
+          `/api/users/${userID}/collaborations?order=DESC`,
+          { method: "GET" },
+          userID
+        );
+
+        console.log(collaborationInbox);
+        setInboxes(collaborationInbox);
       } catch (err) {
         console.error("Error fetching collaborations:", err);
         alert("Failed to load notifications.");
@@ -54,30 +46,19 @@ export default function Inbox() {
     status: "Accepted" | "Rejected"
   ) => {
     try {
+      if (!userID) return;
       console.log("Updating collaboration:", { ID, status }); // Debugging log
 
-      const response = await fetch(
+      const updateCollaboration = await fetchWithLogging<
+        CollaborationInterface["patch"]
+      >(
         `/api/users/${userID}/collaborations/${ID}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ Status: status }),
-        }
+        { method: "PUT", body: { Status: status } },
+        userID
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error response from API:", errorData); // Log API response
-        throw new Error("Failed to update collaboration status");
-      }
-
-      setInboxes((prev) =>
-        prev.map((inbox) =>
-          inbox.ID === ID ? { ...inbox, Status: status } : inbox
-        )
-      );
+      console.log(updateCollaboration);
+      window.location.reload();
     } catch (error) {
       console.error(`Error updating collaboration to ${status}:`, error);
       alert(

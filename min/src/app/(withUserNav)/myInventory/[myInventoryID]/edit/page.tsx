@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { PersonalInventoryInterface } from "@/app/zods/db/personalInventory";
+import { fetchWithLogging } from "@/app/utils/log";
 
 export default function EditInventory({
   params,
@@ -13,6 +14,7 @@ export default function EditInventory({
   params: { myInventoryID: number };
 }) {
   const { data: session, status } = useSession();
+  const userID = session?.user.id;
   const router = useRouter();
 
   const [inventoryName, setInventoryName] = useState<string>("");
@@ -41,29 +43,27 @@ export default function EditInventory({
       if (!params || !params.myInventoryID) return;
 
       try {
-        const response = await fetch(
-          `/api/users/${session?.user.id}/personalInventories/${params.myInventoryID}`
+        if (!userID) return;
+        const getPersonalInventory = await fetchWithLogging<
+          PersonalInventoryInterface["full"][]
+        >(
+          `/api/users/${userID}/personalInventories/${params.myInventoryID}`,
+          { method: "GET" },
+          userID
         );
 
-        if (!response.ok) {
-          throw new Error(`Error fetching inventory: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        const data = result[0] as PersonalInventoryInterface["full"];
+        const data = getPersonalInventory[0];
 
         console.log("Fetched Data:", data);
 
-        // Populate fields with fetched data
         setInventoryName(data.Name || "");
         setDescription(data.Description || "");
         setExistingColumns(data.Input_Enable?.Enable || []);
         setSelectedColumns(data.Input_Enable?.Enable || []);
 
-        // Map collaborators with Collaboration_ID
         const collaborators =
           data.Collaborator_Username?.map((username, index) => ({
-            collaborationID: data.Collaboration_ID[index], // Map collaboration ID
+            collaborationID: data.Collaboration_ID[index],
             username,
             permission: data.Collaborator_Permission[index] || "View",
           })) || [];
@@ -143,50 +143,42 @@ export default function EditInventory({
     setIsSubmitting(true);
 
     try {
+      if (!userID) return;
       const formattedInputEnable = { Enable: selectedColumns };
 
       const payload = {
         Name: inventoryName,
         Description: description || null,
         Input_Enable: formattedInputEnable,
-        UpdatedBy: session.user.id,
+        UpdatedBy: userID,
         Collaborators: {
           update: existingCollaborators
             .filter((col) => !col.toDelete)
             .map((col) => ({
-              collaborationID: col.collaborationID, // Ensure this is included
+              collaborationID: col.collaborationID,
               username: col.username,
               permission: col.permission,
             })),
           delete: existingCollaborators
             .filter((col) => col.toDelete)
             .map((col) => ({
-              collaborationID: col.collaborationID, // Ensure this is included
+              collaborationID: col.collaborationID,
             })),
           add: newCollaborators,
         },
       };
 
-      console.log("Payload:", payload); // Debugging purpose
+      console.log("Payload:", payload);
 
-      const response = await fetch(
+      const updatePersonalInventory = await fetchWithLogging(
         `/api/users/${session.user.id}/personalInventories/${params.myInventoryID}`,
         {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
+          method: "PUT",
+          body: payload,
+        },
+        userID
       );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error updating inventory:", errorData);
-        alert("Failed to update inventory: " + errorData.message);
-        return;
-      }
-
+      console.log(updatePersonalInventory);
       alert("Inventory updated successfully.");
       router.push(`/myInventory/${params.myInventoryID}`);
     } catch (error) {

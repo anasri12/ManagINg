@@ -21,7 +21,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -37,6 +36,7 @@ import { Session } from "next-auth";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
+import { fetchWithLogging } from "@/app/utils/log";
 interface BaseRowData {
   ID: number; // Include other common properties if needed
   Name: string;
@@ -58,7 +58,6 @@ export function DataTable<TData extends BaseRowData, TValue>({
   formFields,
   title,
   apiUrl,
-  userID,
   inventoryID,
 }: DataTableProps<TData, TValue> & {
   formFields: string[];
@@ -164,19 +163,17 @@ export function DataTable<TData extends BaseRowData, TValue>({
     };
 
     try {
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      if (!session) return;
+      const addPersonalInventoryItem = await fetchWithLogging(
+        apiUrl,
+        {
+          method: "POST",
+          body: payload,
         },
-        body: JSON.stringify(payload),
-      });
+        session.user.id
+      );
 
-      if (!response.ok) {
-        throw new Error(`Failed to add item: ${response.statusText}`);
-      }
-
-      console.log(response);
+      console.log(addPersonalInventoryItem);
       window.location.reload();
     } catch (error) {
       console.error("Error adding item:", error);
@@ -209,20 +206,18 @@ export function DataTable<TData extends BaseRowData, TValue>({
     console.log(payload);
 
     try {
+      if (!session) return;
       const patchUrl = `${apiUrl}/${editingRowId}`;
-      const response = await fetch(patchUrl, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
+      const updateInventoryItem = await fetchWithLogging(
+        patchUrl,
+        {
+          method: "PUT",
+          body: payload,
         },
-        body: JSON.stringify(payload),
-      });
+        session.user.id
+      );
 
-      console.log(response);
-
-      if (!response.ok) {
-        throw new Error(`Failed to update item: ${response.statusText}`);
-      }
+      console.log(updateInventoryItem);
 
       window.location.reload();
     } catch (error) {
@@ -235,15 +230,17 @@ export function DataTable<TData extends BaseRowData, TValue>({
     if (!confirmed) return;
 
     try {
+      if (!session) return;
       const deleteUrl = `${apiUrl}/${rowId}`;
-      const response = await fetch(deleteUrl, {
-        method: "DELETE",
-      });
+      const deletePersonalInventoryItem = await fetchWithLogging(
+        deleteUrl,
+        {
+          method: "DELETE",
+        },
+        session.user.id
+      );
 
-      if (!response.ok) {
-        throw new Error(`Failed to delete item: ${response.statusText}`);
-      }
-      console.log(response);
+      console.log(deletePersonalInventoryItem);
       window.location.reload();
     } catch (error) {
       console.error("Error deleting item:", error);

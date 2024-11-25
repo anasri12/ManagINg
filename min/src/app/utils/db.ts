@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 
 import { ResultSetHeader } from "mysql2/promise";
+import { LogInterface } from "../zods/db/log";
 
 export async function queryDatabase<T>(
   sql: string,
@@ -26,3 +27,4 @@ export async function queryDatabase<T>(
     throw new Error("Database error");
   }
 }
+
