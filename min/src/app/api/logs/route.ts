@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-    const sql = `SELECT ${selectClause} FROM API_Usage ${whereClause}`;
+    const sql = `SELECT ${selectClause} FROM API_Usage ${whereClause} ORDER BY CreatedAt DESC`;
 
     console.log("SQL Query:", sql);
     console.log("Query Params:", params);

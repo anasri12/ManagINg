@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { ReportInterface } from "@/app/zods/db/report";
+import { useSession } from "next-auth/react";
 
 interface Message {
   id: number;
   content: string;
-  status: "On process" | "Problem solved";
+  status: "Open" | "Resolved";
   sentDate: string;
-  username: string; // Sender's username
+  username: string;
   reply?: {
     content: string;
     admin: string;
@@ -18,41 +20,85 @@ interface Message {
 }
 
 export default function AdminInbox() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      content: "User has a problem with login.",
-      status: "On process",
-      sentDate: new Date().toLocaleString(),
-      username: "JohnDoe",
-    },
-  ]);
+  const { data: session, status } = useSession();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
   const [replyingMessageId, setReplyingMessageId] = useState<number | null>(
     null
   );
-  const [reply, setReply] = useState<string>("");
+  const [reply, setReply] = useState<string>("-");
 
-  const adminUsername = "AdminUser"; // Replace with dynamic admin username if available
+  const adminID = session?.user.id; // Replace with dynamic admin username if available
 
-  const handleReply = (id: number) => {
-    setReplyingMessageId(id);
-  };
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch("/api/reports");
+        if (!response.ok) {
+          throw new Error("Failed to fetch reports.");
+        }
 
-  const handleMarkSolved = (id: number) => {
+        const data = await response.json();
+        const formattedMessages = data.map(
+          (report: ReportInterface["full"]) => ({
+            id: report.ID,
+            content: report.Message,
+            status: report.Status === "Open" ? "Open" : "Resolved",
+            sentDate: new Date(report.CreatedAt).toLocaleString(),
+            username: report.User_ID, // Assuming User_Username is included in the API response
+            reply: report.Response
+              ? {
+                  content: report.Response,
+                  admin: report.ResolvedByAdmin || "Unknown Admin",
+                  replyDate: report.ResolvedAt
+                    ? new Date(report.ResolvedAt).toLocaleString()
+                    : "",
+                }
+              : undefined,
+          })
+        );
+        setMessages(formattedMessages);
+      } catch (error) {
+        console.error("Error fetching reports:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, []);
+
+  const handleMarkSolved = async (id: number) => {
     if (
       confirm(
         "Are you sure you want to mark this message as solved? This action cannot be undone."
       )
     ) {
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === id ? { ...msg, status: "Problem solved" } : msg
-        )
-      );
+      try {
+        const response = await fetch(`/api/reports/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            Status: "Resolved",
+            Response: reply ?? "-",
+            ResolvedByAdmin: adminID,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update the report.");
+        }
+
+        window.location.reload();
+      } catch (error) {
+        console.error("Error updating report:", error);
+      }
     }
   };
 
-  const handleSendReply = (id: number) => {
+  const handleSendReply = async (id: number) => {
     const replyDate = new Date().toLocaleString();
 
     if (
@@ -60,25 +106,33 @@ export default function AdminInbox() {
         "Are you sure you want to send this reply and mark the message as solved?"
       )
     ) {
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === id
-            ? {
-                ...msg,
-                status: "Problem solved",
-                reply: {
-                  content: reply,
-                  admin: adminUsername,
-                  replyDate,
-                },
-              }
-            : msg
-        )
-      );
-      setReply("");
-      setReplyingMessageId(null);
+      try {
+        const response = await fetch(`/api/reports/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            Status: "Resolved",
+            Response: reply,
+            ResolvedByAdmin: adminID,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update the report.");
+        }
+
+        window.location.reload();
+      } catch (error) {
+        console.error("Error updating report:", error);
+      }
     }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-28 py-6 px-6">
@@ -103,16 +157,14 @@ export default function AdminInbox() {
           <div
             key={msg.id}
             className={`flex flex-col rounded-lg shadow-md p-4 border ${
-              msg.status === "Problem solved"
+              msg.status === "Resolved"
                 ? "bg-green-100 border-green-300"
                 : "bg-red-100 border-red-300"
             }`}
           >
             <p
               className={`font-semibold ${
-                msg.status === "Problem solved"
-                  ? "text-green-700"
-                  : "text-red-700"
+                msg.status === "Resolved" ? "text-green-700" : "text-red-700"
               }`}
             >
               {msg.status}
@@ -132,7 +184,7 @@ export default function AdminInbox() {
                 </p>
               </div>
             )}
-            {!msg.reply && msg.status !== "Problem solved" && (
+            {!msg.reply && msg.status !== "Resolved" && (
               <div className="flex gap-4 mt-4">
                 <Button
                   className="bg-green-600 text-white hover:bg-green-700 px-4 py-2"
@@ -142,38 +194,37 @@ export default function AdminInbox() {
                 </Button>
                 <Button
                   className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2"
-                  onClick={() => handleReply(msg.id)}
+                  onClick={() => setReplyingMessageId(msg.id)}
                 >
                   Reply
                 </Button>
               </div>
             )}
-            {replyingMessageId === msg.id &&
-              msg.status !== "Problem solved" && (
-                <div className="mt-4">
-                  <textarea
-                    placeholder="Type your reply here..."
-                    value={reply}
-                    onChange={(e) => setReply(e.target.value)}
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                  />
-                  <div className="flex gap-4 mt-4">
-                    <Button
-                      className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2"
-                      onClick={() => handleSendReply(msg.id)}
-                      disabled={reply.trim() === ""}
-                    >
-                      Send Reply
-                    </Button>
-                    <Button
-                      className="bg-gray-200 text-black hover:bg-gray-300 px-4 py-2"
-                      onClick={() => setReplyingMessageId(null)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
+            {replyingMessageId === msg.id && msg.status !== "Resolved" && (
+              <div className="mt-4">
+                <textarea
+                  placeholder="Type your reply here..."
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                />
+                <div className="flex gap-4 mt-4">
+                  <Button
+                    className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2"
+                    onClick={() => handleSendReply(msg.id)}
+                    disabled={reply.trim() === ""}
+                  >
+                    Send Reply
+                  </Button>
+                  <Button
+                    className="bg-gray-200 text-black hover:bg-gray-300 px-4 py-2"
+                    onClick={() => setReplyingMessageId(null)}
+                  >
+                    Cancel
+                  </Button>
                 </div>
-              )}
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -21,7 +21,7 @@ export default function AdminNavBar({ session }: { session: Session | null }) {
         <NavigationMenu className="pt-2 pl-12">
           <NavigationMenuList>
             <NavigationMenuItem>
-              <Link href="/admin/management" legacyBehavior passHref>
+              <Link href="/admin/management/user" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Management
                 </NavigationMenuLink>
