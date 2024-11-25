@@ -12,13 +12,15 @@ const FullUserSchema = z.object({
 });
 
 const PostUserSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters long"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters long"),
-  profilePictureUrl: z.string().url("Invalid URL").nullable().optional(),
+  Username: z.string().min(3, "Username must be at least 3 characters long"),
+  Email: z.string().email("Invalid email address"),
+  Password: z.string().min(6, "Password must be at least 6 characters long"),
+  Profile_Picture_URL: z.string().url("Invalid URL").nullable().optional(),
 });
 
-const PatchUserSchema = FullUserSchema.partial();
+const PatchUserSchema = PostUserSchema.merge(
+  z.object({ Role: z.enum(["Admin", "User", "Developer"]) })
+).partial();
 
 type FullUserInterface = z.infer<typeof FullUserSchema>;
 

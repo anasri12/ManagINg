@@ -1,12 +1,8 @@
 import { z } from "zod";
-import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { queryDatabase } from "@/app/utils/db";
-import { UserIDSchema } from "@/app/zods/params";
-import { UserSchema } from "@/app/zods/db/user";
 import { QueryCollaborationSchema } from "@/app/zods/query";
-import { UserFields } from "@/app/utils/mapfields/user";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { CollaborationFields } from "@/app/utils/mapfields/collaboration";
 import { CollaborationSchema } from "@/app/zods/db/collaboration";

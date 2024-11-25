@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { db } from "@/lib/db";
+import bcrypt from "bcrypt";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
@@ -16,7 +16,10 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.id !== params.userID) {
+    if (
+      !session ||
+      !(session.user.role === "Admin" || session.user.id === params.userID)
+    ) {
       return NextResponse.json({ message: "Access Denied" }, { status: 403 });
     }
 
@@ -82,7 +85,7 @@ export async function GET(
     console.log("SQL Query:", sql);
     console.log("Query Params:", filter_params);
 
-    const users = await queryDatabase<any[]>(sql, filter_params);
+    const users = await queryDatabase(sql, filter_params);
     console.log("Database Results:", users);
 
     if (!Array.isArray(users)) {
@@ -135,12 +138,14 @@ export async function PATCH(
 
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.id !== params.userID) {
+    if (
+      !session ||
+      !(session.user.role === "Admin" || session.user.id === params.userID)
+    ) {
       return NextResponse.json({ message: "Access Denied" }, { status: 403 });
     }
 
     const body = await req.json();
-
     const parsedBody = UserSchema["patch"].parse(body);
 
     if (!parsedBody || Object.keys(parsedBody).length === 0) {
@@ -154,8 +159,14 @@ export async function PATCH(
     const values = [];
 
     for (const [key, value] of Object.entries(parsedBody)) {
-      fields.push(`${key} = ?`);
-      values.push(value);
+      if (key === "password") {
+        const hashedPassword = await bcrypt.hash(value as string, 10);
+        fields.push(`Password_Hash = ?`);
+        values.push(hashedPassword);
+      } else {
+        fields.push(`${key} = ?`);
+        values.push(value);
+      }
     }
 
     values.push(params.userID);
@@ -166,18 +177,71 @@ export async function PATCH(
       WHERE ID = ?
     `;
 
-    await db.query(sql, values);
+    await queryDatabase(sql, values);
 
     return NextResponse.json({ message: "User updated successfully" });
-  } catch (validationError) {
-    if (validationError instanceof z.ZodError) {
+  } catch (error) {
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: "Validation Error", errors: validationError.errors },
+        { message: "Validation Error", errors: error.errors },
         { status: 400 }
       );
     }
 
-    console.error("Unexpected error:", validationError);
+    console.error("Unexpected error:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { userID: string } }
+) {
+  try {
+    UserIDSchema.parse(params);
+
+    const session = await getServerSession(authOptions);
+
+    if (
+      !session ||
+      !(session.user.role === "Admin" || session.user.id === params.userID)
+    ) {
+      return NextResponse.json({ message: "Access Denied" }, { status: 403 });
+    }
+
+    const sql = `DELETE FROM User WHERE ID = ?`;
+    const result = await queryDatabase(sql, [params.userID]);
+
+    if (Array.isArray(result)) {
+      throw new Error(
+        "Unexpected query result: Expected a ResultSetHeader, but got an array."
+      );
+    }
+
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { message: "User not found or already deleted" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: "User deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.errors);
+      return NextResponse.json(
+        { message: "Validation Error", errors: error.errors },
+        { status: 400 }
+      );
+    }
+
+    console.error("Unexpected error during deletion:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }

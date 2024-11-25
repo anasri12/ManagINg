@@ -37,7 +37,11 @@ const PostPersonalInventorySchema = z.object({
   UpdatedBy: z.string(),
 });
 
-const PatchPersonalInventorySchema = FullPersonalInventorySchema.partial();
+const PatchPersonalInventorySchema = PostPersonalInventorySchema.omit({
+  Owner_ID: true,
+})
+  .merge(z.object({ Collaborator_Number: z.number() }))
+  .partial();
 
 type FullPersonalInventoryInterface = z.infer<
   typeof FullPersonalInventorySchema
