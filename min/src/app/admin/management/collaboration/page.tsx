@@ -12,21 +12,29 @@ import {
 import { UserInterface } from "@/app/zods/db/user";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { CollaborationInterface } from "@/app/zods/db/collaboration";
+import { format } from "date-fns";
 
-export default function Users() {
-  const [users, setUsers] = useState<UserInterface["full"][]>([]);
+export default function Collaborations() {
+  const { data: session, status } = useSession();
+  const userID = session?.user.id;
+  const [collaborations, setCollaborations] = useState<
+    CollaborationInterface["full"][]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("/api/users");
+        if (!userID) return;
+        const response = await fetch(`/api/collaborations`);
         if (!response.ok) {
           throw new Error(`Error: ${response.statusText}`);
         }
         const data = await response.json();
-        setUsers(data);
+        setCollaborations(data);
         setLoading(false);
       } catch (error) {
         if (error instanceof Error) {
@@ -85,24 +93,32 @@ export default function Users() {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Organization</TableHead>
-                  <TableHead>User</TableHead>
+                  <TableHead>Username</TableHead>
+                  <TableHead>Inventory Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Resolved At</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.ID}>
-                    <TableCell>{user.ID}</TableCell>
-                    <TableCell>{user.Username}</TableCell>
-                    <TableCell>{user.Email}</TableCell>
-                    <TableCell>{user.Password_Hash}</TableCell>
+                {collaborations.map((collaboration) => (
+                  <TableRow key={collaboration.ID}>
+                    <TableCell>{collaboration.ID}</TableCell>
+                    <TableCell>{collaboration.Collaborator_Username}</TableCell>
+                    <TableCell>{collaboration.Inventory_Name}</TableCell>
+                    <TableCell>{collaboration.Status}</TableCell>
+                    <TableCell>
+                      {collaboration.ResolvedAt
+                        ? format(collaboration.ResolvedAt, "PPP p")
+                        : "-"}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell>Total Users: {users.length}</TableCell>
+                  <TableCell>
+                    Total Collaborations: {collaborations.length}
+                  </TableCell>
                 </TableRow>
               </TableFooter>
             </Table>

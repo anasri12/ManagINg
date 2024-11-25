@@ -35,7 +35,7 @@ export default function DevNavBar({ session }: { session: Session | null }) {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/userMode" legacyBehavior passHref>
+              <Link href="/home" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   User Mode
                 </NavigationMenuLink>
@@ -45,7 +45,7 @@ export default function DevNavBar({ session }: { session: Session | null }) {
         </NavigationMenu>
       </div>
       {session && session.user?.name ? (
-        <SideBar session={session} />
+        <SideBar session={session} state="dev" />
       ) : (
         <RenderMode />
       )}

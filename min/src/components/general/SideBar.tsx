@@ -16,9 +16,11 @@ import { OrganizationWithMemberInterface } from "@/app/zods/db/subquery/organiza
 export default function SideBar({
   session,
   groupName,
+  state,
 }: {
   session: Session;
   groupName?: string;
+  state?: "dev" | "admin";
 }) {
   const userID = session?.user.id;
   const [groups, setGroups] = useState<OrganizationWithMemberInterface[]>([]);
@@ -64,8 +66,16 @@ export default function SideBar({
                 {session.user?.name || "User"}
               </div>
               {groupName ? (
-                <div className="w-36 justify-start flex text-gray-500 text-sm">
+                <div className="w-36 justify-start flex text-blue-500 text-sm">
                   {groupName}
+                </div>
+              ) : state === "admin" ? (
+                <div className="w-36 justify-start flex text-red-500 text-sm">
+                  Admin
+                </div>
+              ) : state === "dev" ? (
+                <div className="w-36 justify-start flex text-red-500 text-sm">
+                  Dev
                 </div>
               ) : (
                 <div className="w-36 justify-start flex text-gray-500 text-sm">
