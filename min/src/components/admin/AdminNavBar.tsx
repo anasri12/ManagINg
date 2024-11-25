@@ -21,21 +21,21 @@ export default function AdminNavBar({ session }: { session: Session | null }) {
         <NavigationMenu className="pt-2 pl-12">
           <NavigationMenuList>
             <NavigationMenuItem>
-              <Link href="/management" legacyBehavior passHref>
+              <Link href="/admin/management" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Management
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/logs" legacyBehavior passHref>
+              <Link href="/admin/logs" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Logs
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/InboxAdmin" legacyBehavior passHref>
+              <Link href="/admin/inboxAdmin" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Inbox
                 </NavigationMenuLink>
