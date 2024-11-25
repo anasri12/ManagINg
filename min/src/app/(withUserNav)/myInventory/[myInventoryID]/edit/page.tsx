@@ -203,169 +203,171 @@ export default function EditInventory({
 
   return (
     <>
-      <div className="font-inria font-normal mt-3 text-5xl pl-11 ">
-        Edit Inventory
-      </div>
-      <div className="font-roboto font-normal mt-16 text-xl pl-36 ">
-        {/* Inventory Name and Description */}
-        <div className="flex gap-4">
-          <label className="text-gray-950">Name of inventory</label>
-          <input
-            type="text"
-            value={inventoryName}
-            onChange={(e) => setInventoryName(e.target.value)}
-            className="w-80 h-9 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
-            required
-          />
+      <div className="container mx-28 py-6 px-6">
+        {/* Header */}
+        <div className="font-inria font-normal mt-3 text-5xl pl-11 ">
+          Edit Inventory
         </div>
-        <div className="flex gap-4 mt-6">
-          <label className="text-gray-950">Description</label>
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-96 h-9 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
-          />
-        </div>
-        {/* Collaborators */}
-        <div className="flex gap-4 mt-6">
-          <label className="text-gray-950">Collaborators</label>
-          <div>
+        <div className="font-roboto font-normal mt-16 text-xl pl-36 ">
+          {/* Inventory Name and Description */}
+          <div className="flex gap-4">
+            <label className="text-gray-950">Name of inventory</label>
             <input
               type="text"
-              value={colabUsername}
-              onChange={(e) => setColabUsername(e.target.value)}
-              onKeyDown={handleColabKeyPress}
-              placeholder="Enter username"
+              value={inventoryName}
+              onChange={(e) => setInventoryName(e.target.value)}
               className="w-80 h-9 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
+              required
             />
-            <select
-              value={colabPermission}
-              onChange={(e) => setColabPermission(e.target.value)}
-              className="ml-4 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
-            >
-              <option value="View">View</option>
-              <option value="Edit">Edit</option>
-            </select>
+          </div>
+          <div className="flex gap-4 mt-6">
+            <label className="text-gray-950">Description</label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-96 h-9 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
+            />
+          </div>
+          {/* Collaborators */}
+          <div className="flex gap-4 mt-6">
+            <label className="text-gray-950">Collaborators</label>
+            <div>
+              <input
+                type="text"
+                value={colabUsername}
+                onChange={(e) => setColabUsername(e.target.value)}
+                onKeyDown={handleColabKeyPress}
+                placeholder="Enter username"
+                className="w-80 h-9 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
+              />
+              <select
+                value={colabPermission}
+                onChange={(e) => setColabPermission(e.target.value)}
+                className="ml-4 p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
+              >
+                <option value="View">View</option>
+                <option value="Edit">Edit</option>
+              </select>
+            </div>
+            {/* Existing Collaborators */}
+            <div className="mt-4">
+              {existingCollaborators.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {existingCollaborators.map((collaborator, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-2 px-3 py-1 ${
+                        collaborator.toDelete ? "bg-red-200" : "bg-gray-200"
+                      } rounded-md`}
+                    >
+                      <span>{collaborator.username}</span>
+                      <select
+                        value={collaborator.permission}
+                        onChange={(e) =>
+                          updateExistingCollaboratorPermission(
+                            index,
+                            e.target.value
+                          )
+                        }
+                        className="p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
+                        disabled={collaborator.toDelete}
+                      >
+                        <option value="View">View</option>
+                        <option value="Edit">Edit</option>
+                      </select>
+                      {collaborator.toDelete ? (
+                        <button
+                          onClick={() => restoreCollaborator(index)}
+                          className="text-blue-600"
+                        >
+                          Restore
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => markCollaboratorForDeletion(index)}
+                          className="text-red-600"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* New Collaborators */}
+            <div className="mt-4">
+              {newCollaborators.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {newCollaborators.map((collaborator, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 px-3 py-1 bg-gray-200 rounded-md"
+                    >
+                      <span>
+                        {collaborator.username} ({collaborator.permission})
+                      </span>
+                      <button
+                        onClick={() => removeNewCollaborator(index)}
+                        className="text-red-600"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Input Columns */}
+          <div className="flex gap-4 mt-6">
+            <label className=" text-gray-950">Enable input (column)</label>
+            <div className="grid grid-rows-4 grid-flow-col gap-x-24 gap-y-8">
+              {[
+                { id: "Name", label: "Name", required: true },
+                { id: "Amount", label: "Amount", required: true },
+                { id: "Description", label: "Description" },
+                { id: "Bought_From", label: "Bought From" },
+                { id: "Current_Used_Day", label: "Current Used Day" },
+                { id: "Brand", label: "Brand" },
+                { id: "Price", label: "Price" },
+                { id: "Bought_Date", label: "Bought Date" },
+                { id: "EXP_BFF_Date", label: "EXP / BFF Date" },
+                { id: "Picture_URL", label: "Picture" },
+                { id: "Guarantee_Period", label: "Guarantee Period" },
+              ].map((column) => (
+                <div key={column.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={column.id}
+                    onCheckedChange={() => handleCheckboxChange(column.id)}
+                    checked={selectedColumns.includes(column.id)}
+                    disabled={existingColumns.includes(column.id)}
+                  />
+                  <label
+                    htmlFor={column.id}
+                    className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {column.label}
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Existing Collaborators */}
-        <div className="mt-4">
-          {existingCollaborators.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {existingCollaborators.map((collaborator, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center gap-2 px-3 py-1 ${
-                    collaborator.toDelete ? "bg-red-200" : "bg-gray-200"
-                  } rounded-md`}
-                >
-                  <span>{collaborator.username}</span>
-                  <select
-                    value={collaborator.permission}
-                    onChange={(e) =>
-                      updateExistingCollaboratorPermission(
-                        index,
-                        e.target.value
-                      )
-                    }
-                    className="p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-700"
-                    disabled={collaborator.toDelete}
-                  >
-                    <option value="View">View</option>
-                    <option value="Edit">Edit</option>
-                  </select>
-                  {collaborator.toDelete ? (
-                    <button
-                      onClick={() => restoreCollaborator(index)}
-                      className="text-blue-600"
-                    >
-                      Restore
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => markCollaboratorForDeletion(index)}
-                      className="text-red-600"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Submit Button */}
+        <div className="flex w-full justify-center">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="w-auto mt-10 py-2 px-4 text-xl text-white bg-red-600 rounded-md hover:bg-red-700"
+          >
+            {isSubmitting ? "Updating Inventory..." : "Update Inventory"}
+          </button>
         </div>
-
-        {/* New Collaborators */}
-        <div className="mt-4">
-          {newCollaborators.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {newCollaborators.map((collaborator, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 px-3 py-1 bg-gray-200 rounded-md"
-                >
-                  <span>
-                    {collaborator.username} ({collaborator.permission})
-                  </span>
-                  <button
-                    onClick={() => removeNewCollaborator(index)}
-                    className="text-red-600"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Input Columns */}
-      <div className="flex gap-4 mt-6">
-        <label className="text-gray-950">Enable input (column)</label>
-        <div className="grid grid-rows-4 grid-flow-col gap-x-24 gap-y-8">
-          {[
-            { id: "Name", label: "Name", required: true },
-            { id: "Amount", label: "Amount", required: true },
-            { id: "Description", label: "Description" },
-            { id: "Bought_From", label: "Bought From" },
-            { id: "Current_Used_Day", label: "Current Used Day" },
-            { id: "Brand", label: "Brand" },
-            { id: "Price", label: "Price" },
-            { id: "Bought_Date", label: "Bought Date" },
-            { id: "EXP_BFF_Date", label: "EXP / BFF Date" },
-            { id: "Picture_URL", label: "Picture" },
-            { id: "Guarantee_Period", label: "Guarantee Period" },
-          ].map((column) => (
-            <div key={column.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={column.id}
-                onCheckedChange={() => handleCheckboxChange(column.id)}
-                checked={selectedColumns.includes(column.id)}
-                disabled={existingColumns.includes(column.id)}
-              />
-              <label
-                htmlFor={column.id}
-                className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {column.label}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Submit Button */}
-      <div className="flex w-full justify-center">
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="w-auto mt-10 py-2 px-4 text-xl text-white bg-red-600 rounded-md hover:bg-red-700"
-        >
-          {isSubmitting ? "Updating Inventory..." : "Update Inventory"}
-        </button>
       </div>
     </>
   );
