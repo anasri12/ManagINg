@@ -6,9 +6,11 @@ import Image from "next/image";
 import { useEdgeStore } from "@/lib/edgestore";
 import Loading from "@/components/general/Loading";
 import Link from "next/link";
+import { fetchWithLogging } from "@/app/utils/log";
 
 export default function Profile() {
   const { data: session, status } = useSession();
+  const userID = session?.user.id;
   const [file, setFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,6 +43,7 @@ export default function Profile() {
     setIsSubmitting(true);
 
     try {
+      if (!userID) return;
       // Upload the file to EdgeStore
       const uploadResponse = await edgestore.publicFiles.upload({
         file,
@@ -54,23 +57,17 @@ export default function Profile() {
       }
 
       // Save the uploaded file URL to the user's profile in the database
-      const response = await fetch(`/api/users/${session?.user.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ Profile_Picture_URL: uploadResponse.url }),
-        headers: {
-          "Content-Type": "application/json",
+      const updatePictureProfile = await fetchWithLogging(
+        `/api/users/${userID}`,
+        {
+          method: "PUT",
+          body: { Profile_Picture_URL: uploadResponse.url },
         },
-      });
+        userID
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to save profile image.");
-      }
-
-      console.log("Profile updated successfully:", data);
+      console.log("Profile updated successfully:", updatePictureProfile);
       setLoading(false);
-      // Reload the page to reflect the new profile picture
       window.location.reload();
     } catch (err) {
       setLoading(false);

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // Use for redirection
+import { usePathname, useRouter } from "next/navigation"; // Use for redirection
 import Link from "next/link";
 import {
   NavigationMenu,
@@ -12,7 +12,9 @@ import {
 import SideBar from "@/components/general/SideBar";
 import RenderMode from "@/components/dynamic/RenderMode";
 import { Session } from "next-auth";
-import RenderGroupMemberState from "@/components/dynamic/RenderGroupMemberState";
+import RenderGroupMemberState, {
+  selectNav,
+} from "@/components/dynamic/RenderGroupMemberState";
 import { OrganizationWithMemberInterface } from "@/app/zods/db/subquery/organizationWithMember";
 
 export default function GroupNavBar({
@@ -27,7 +29,7 @@ export default function GroupNavBar({
   const [groups, setGroups] = useState<OrganizationWithMemberInterface[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const pathname = usePathname();
   useEffect(() => {
     const fetchGroups = async () => {
       try {
@@ -94,9 +96,17 @@ export default function GroupNavBar({
                   legacyBehavior
                   passHref
                 >
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Management
-                  </NavigationMenuLink>
+                  {pathname.startsWith(`/group/${groupID}/management`) ? (
+                    <NavigationMenuLink className={selectNav()}>
+                      Management
+                    </NavigationMenuLink>
+                  ) : (
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      Management
+                    </NavigationMenuLink>
+                  )}
                 </Link>
               </NavigationMenuItem>
             ) : (

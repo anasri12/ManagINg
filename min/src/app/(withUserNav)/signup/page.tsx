@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Loading from "@/components/general/Loading";
+import { fetchWithLogging } from "@/app/utils/log";
 
 export default function SignupPage() {
   const { data: session, status } = useSession();
@@ -29,22 +30,16 @@ export default function SignupPage() {
     setError(null);
     setIsSubmitting(true);
 
-    const response = await fetch("/api/users", {
-      method: "POST",
-      body: JSON.stringify({ username, email, password, cpassword }),
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetchWithLogging(
+      "/api/users",
+      {
+        method: "POST",
+        body: { username, email, password, cpassword },
       },
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      router.push("/signin");
-    } else {
-      setError(data.error || "Failed to create account");
-    }
-
+      "guest"
+    );
+    console.log(response);
+    router.push("/signin");
     setIsSubmitting(false);
   };
 

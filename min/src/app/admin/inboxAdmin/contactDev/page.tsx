@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 interface Message {
   id: number;
   content: string;
-  status: "On process" | "Problem solved";
+  status: "Open" | "Resolved";
   sentDate: string;
   reply?: {
     content: string;
@@ -16,28 +17,83 @@ interface Message {
   };
 }
 
-export default function UserInbox() {
+export default function ContactDev() {
+  const { data: session } = useSession();
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const handleSubmit = () => {
-    if (message.trim() === "") return;
+  const adminID = session?.user.id;
 
-    const newMessage: Message = {
-      id: messages.length + 1,
-      content: message,
-      status: "On process",
-      sentDate: new Date().toLocaleString(),
+  // Fetch messages on load
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch("/api/contacts");
+        if (!response.ok) {
+          throw new Error("Failed to fetch messages.");
+        }
+        const data = await response.json();
+
+        const formattedMessages = data.map((msg: any) => ({
+          id: msg.ID,
+          content: msg.Message,
+          status: msg.Status === "Open" ? "Open" : "Resolved",
+          sentDate: new Date(msg.CreatedAt).toLocaleString(),
+          reply: msg.Response
+            ? {
+                content: msg.Response,
+                admin: msg.ResolvedByAdmin,
+                replyDate: new Date(msg.ResolvedAt).toLocaleString(),
+              }
+            : undefined,
+        }));
+
+        setMessages(formattedMessages);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setMessages((prevMessages) => [newMessage, ...prevMessages]);
-    setMessage("");
+    fetchMessages();
+  }, []);
+
+  // Submit new message
+  const handleSubmit = async () => {
+    if (message.trim() === "") return;
+
+    try {
+      const response = await fetch("/api/contacts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          Admin_ID: adminID,
+          Message: message,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit the message.");
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Error submitting message:", error);
+    }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-28 py-6 px-6">
       {/* Header */}
-      <div className="font-inria text-5xl mb-8">Admin Inbox</div>
+      <div className="font-inria text-5xl mb-8">Contact Developer</div>
 
       {/* Navigation Tabs */}
       <div className="flex gap-4 mb-6">
@@ -57,16 +113,14 @@ export default function UserInbox() {
           <div
             key={msg.id}
             className={`flex flex-col rounded-lg shadow-md p-4 border ${
-              msg.status === "Problem solved"
+              msg.status === "Resolved"
                 ? "bg-green-100 border-green-300"
                 : "bg-red-100 border-red-300"
             }`}
           >
             <p
               className={`font-semibold ${
-                msg.status === "Problem solved"
-                  ? "text-green-700"
-                  : "text-red-700"
+                msg.status === "Resolved" ? "text-green-700" : "text-red-700"
               }`}
             >
               {msg.status}

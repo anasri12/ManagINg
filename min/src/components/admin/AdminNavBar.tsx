@@ -21,7 +21,7 @@ export default function AdminNavBar({ session }: { session: Session | null }) {
         <NavigationMenu className="pt-2 pl-12">
           <NavigationMenuList>
             <NavigationMenuItem>
-              <Link href="/admin/management" legacyBehavior passHref>
+              <Link href="/admin/management/user" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Management
                 </NavigationMenuLink>
@@ -42,7 +42,7 @@ export default function AdminNavBar({ session }: { session: Session | null }) {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/userMode" legacyBehavior passHref>
+              <Link href="/home" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   User Mode
                 </NavigationMenuLink>
@@ -52,7 +52,7 @@ export default function AdminNavBar({ session }: { session: Session | null }) {
         </NavigationMenu>
       </div>
       {session && session.user?.name ? (
-        <SideBar session={session} />
+        <SideBar session={session} state="admin" />
       ) : (
         <RenderMode />
       )}

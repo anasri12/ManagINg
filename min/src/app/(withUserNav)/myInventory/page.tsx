@@ -17,9 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { fetchWithLogging } from "@/app/utils/log";
 
 export default function MyInventory() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const userID = session?.user.id;
   const router = useRouter();
   const [personalInventories, setPersonalInventories] = useState<
     PersonalInventoryInterface["full"][]
@@ -31,17 +33,16 @@ export default function MyInventory() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (session) {
-          const response = await fetch(
-            `/api/users/${session?.user.id}/personalInventories`
-          );
-          if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
-          }
-          const data = await response.json();
-          setPersonalInventories(data);
-          setLoading(false);
-        }
+        if (!userID) return;
+        const personalInventoryData = await fetchWithLogging<
+          PersonalInventoryInterface["full"][]
+        >(
+          `/api/users/${userID}/personalInventories`,
+          { method: "GET" },
+          session.user.id
+        );
+        setPersonalInventories(personalInventoryData);
+        setLoading(false);
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);
@@ -53,7 +54,7 @@ export default function MyInventory() {
     };
 
     fetchData();
-  }, [session?.user.id]);
+  }, [userID]);
 
   if (loading) {
     return <Loading />;
@@ -63,23 +64,21 @@ export default function MyInventory() {
     return <div>Error: {error}</div>;
   }
 
-  // Handle inventory deletion
   const handleDelete = async (personalInventoryID: number) => {
+    if (!userID) return;
     const confirmed = confirm(
       "Are you sure you want to delete this inventory?"
     );
     if (confirmed) {
       try {
-        const response = await fetch(
-          `/api/users/${session?.user.id}/personalInventories/${personalInventoryID}`,
+        const deletePersonalInventory = await fetchWithLogging(
+          `/api/users/${userID}/personalInventories/${personalInventoryID}`,
           {
             method: "DELETE",
-          }
+          },
+          userID
         );
-
-        if (!response.ok) {
-          throw new Error("Failed to delete inventory");
-        }
+        console.log(deletePersonalInventory);
 
         window.location.reload();
       } catch (error) {
@@ -89,7 +88,6 @@ export default function MyInventory() {
     }
   };
 
-  // Filter data based on the global search filter
   const filteredData = personalInventories.filter((personalInventory) =>
     personalInventory.Name.toLowerCase().includes(globalFilter.toLowerCase())
   );
@@ -120,7 +118,7 @@ export default function MyInventory() {
         <Table className="w-full">
           <TableHeader>
             <TableRow>
-              <TableHead>NO.</TableHead>
+              <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Colab Users</TableHead>
               <TableHead>Description</TableHead>
@@ -132,7 +130,7 @@ export default function MyInventory() {
 
           <TableBody>
             {filteredData.length > 0 ? (
-              filteredData.map((personalInventory, index) => (
+              filteredData.map((personalInventory) => (
                 <TableRow
                   key={personalInventory.ID}
                   className={`cursor-pointer hover:bg-gray-100 ${
@@ -144,7 +142,7 @@ export default function MyInventory() {
                     router.push(`/myInventory/${personalInventory.ID}`)
                   }
                 >
-                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{personalInventory.ID}</TableCell>
                   <TableCell>{personalInventory.Name}</TableCell>
                   <TableCell>
                     {personalInventory.Collaborator_Username.length !== 0 ? (

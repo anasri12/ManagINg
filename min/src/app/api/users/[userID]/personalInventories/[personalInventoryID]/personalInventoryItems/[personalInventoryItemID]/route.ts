@@ -6,8 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ResultSetHeader } from "mysql2/promise";
 import { z } from "zod";
 
-// PATCH method for updating an inventory item
-export async function PATCH(
+export async function PUT(
   req: NextRequest,
   {
     params,

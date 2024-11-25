@@ -5,9 +5,13 @@ import Loading from "@/components/general/Loading";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
+import { fetchWithLogging } from "@/app/utils/log";
+import { PersonalInventoryInterface } from "@/app/zods/db/personalInventory";
+import { ResultSetHeader } from "mysql2/promise";
 
 const NewInventory = () => {
   const { data: session, status } = useSession();
+  const userID = session?.user.id;
   const router = useRouter();
 
   const [inventoryName, setInventoryName] = useState<string>("");
@@ -48,7 +52,7 @@ const NewInventory = () => {
   };
 
   const handleSubmit = async () => {
-    if (!session) {
+    if (!userID) {
       alert("You must be logged in to create a new inventory.");
       return;
     }
@@ -57,70 +61,54 @@ const NewInventory = () => {
 
     try {
       // Step 1: Create the inventory
-      if (session) {
-        const inventoryResponse = await fetch(
-          `/api/users/${session.user.id}/personalInventories`,
+      if (!userID) return;
+      const createInventory = await fetchWithLogging<{
+        message: string;
+        inventoryID: number;
+      }>(
+        `/api/users/${session.user.id}/personalInventories`,
+        {
+          method: "POST",
+          body: {
+            Name: inventoryName,
+            Description: description || null,
+            Owner_ID: session.user.id,
+            Input_Enable: { Enable: selectedColumns },
+            UpdatedBy: session.user.id,
+          },
+        },
+        userID
+      );
+
+      console.log("Output from POST", createInventory);
+      const Inventory_ID = createInventory.inventoryID;
+      console.log("Inventory created successfully:", Inventory_ID);
+
+      console.log("Next");
+      // Step 2: Send collaboration invitations
+      for (const collaborator of colabArray) {
+        console.log("In Loop");
+        const createCollaboration = await fetchWithLogging(
+          `/api/users/${userID}/collaborations`,
           {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
+            body: {
+              Permission: collaborator.permission,
+              Inventory_ID: Inventory_ID,
+              Owner_ID: userID,
+              Collaborator_Username: collaborator.username,
             },
-            body: JSON.stringify({
-              Name: inventoryName,
-              Description: description || null,
-              Owner_ID: session.user.id,
-              Input_Enable: { Enable: selectedColumns },
-              UpdatedBy: session.user.id,
-            }),
-          }
+          },
+          userID
         );
+        console.log(createCollaboration);
 
-        if (!inventoryResponse.ok) {
-          const errorData = await inventoryResponse.json();
-          console.error("Error creating inventory:", errorData);
-          alert("Failed to create inventory: " + errorData.message);
-          return;
-        }
-
-        const inventoryResult = await inventoryResponse.json();
-        const inventoryID = inventoryResult.inventoryID;
-        console.log("Inventory created successfully:", inventoryID);
-
-        // Step 2: Send collaboration invitations
-        for (const collaborator of colabArray) {
-          const collaborationResponse = await fetch(
-            `/api/users/${session.user.id}/collaborations`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                Permission: collaborator.permission,
-                Inventory_ID: inventoryID,
-                Owner_ID: session.user.id,
-                Collaborator_Username: collaborator.username,
-              }),
-            }
-          );
-
-          if (!collaborationResponse.ok) {
-            const errorData = await collaborationResponse.json();
-            console.error("Error creating collaboration:", errorData);
-            alert(
-              `Failed to send invitation to ${collaborator.username}: ${errorData.message}`
-            );
-            continue;
-          }
-
-          console.log(
-            `Collaboration invitation sent to ${collaborator.username}.`
-          );
-        }
-
-        // Redirect to the inventory page
-        router.push(`/myInventory/${inventoryID}`);
+        console.log(
+          `Collaboration invitation sent to ${collaborator.username}.`
+        );
       }
+
+      router.push(`/myInventory/${Inventory_ID}`);
     } catch (error) {
       console.error("Unexpected error:", error);
       alert("An unexpected error occurred. Please try again.");
