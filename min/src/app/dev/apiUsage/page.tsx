@@ -9,12 +9,54 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserInterface } from "@/app/zods/db/user";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { format } from "date-fns";
+import Loading from "@/components/general/Loading";
+import { useRouter } from "next/navigation";
+import { LogInterface } from "@/app/zods/db/log";
 
-export default function API() {
-  const [users, setUsers] = useState<UserInterface["full"][]>([]);
+export default function APIUsage() {
+  const { data: session, status } = useSession();
+  const userID = session?.user.id;
+  const router = useRouter();
+  const [logs, setLogs] = useState<LogInterface["full"][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (!userID) return;
+        const response = await fetch(`/api/logs`);
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+        const data = await response.json();
+        setLogs(data);
+        setLoading(false);
+      } catch (error) {
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError("An unknown error occurred");
+        }
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+  if (loading) {
+    if (status === "loading" || status === "authenticated") {
+      return <Loading />;
+    } else return router.push("/home");
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="container mx-28 py-6 px-6">
@@ -28,28 +70,31 @@ export default function API() {
             <Table className="w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>User ID</TableHead>
+                  <TableHead>User_ID</TableHead>
                   <TableHead>Endpoint</TableHead>
-                  <TableHead>method</TableHead>
-                  <TableHead>Status code</TableHead>
-                  <TableHead>Response time</TableHead>
-                  <TableHead>Create at</TableHead>
+                  <TableHead>Method</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Response Time</TableHead>
+                  <TableHead>Created At</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.ID}>
-                    <TableCell>{user.ID}</TableCell>
-                    <TableCell>{user.Username}</TableCell>
-                    <TableCell>{user.Email}</TableCell>
-                    <TableCell>{user.Password_Hash}</TableCell>
+                {logs.map((log) => (
+                  <TableRow key={log.ID}>
+                    <TableCell>{log.User_ID}</TableCell>
+                    <TableCell>{log.Endpoint}</TableCell>
+                    <TableCell>{log.Method}</TableCell>
+                    <TableCell>{log.Status}</TableCell>
+                    <TableCell>{log.Response_Time} ms</TableCell>
+                    <TableCell>
+                      {log.CreatedAt ? format(log.CreatedAt, "PPP p") : "-"}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell>Total Users: {users.length}</TableCell>
+                  <TableCell>Total Collaborations: {logs.length}</TableCell>
                 </TableRow>
               </TableFooter>
             </Table>

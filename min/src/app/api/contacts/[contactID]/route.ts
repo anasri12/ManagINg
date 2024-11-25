@@ -2,9 +2,9 @@ import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { queryDatabase } from "@/app/utils/db";
-import { UserIDSchema } from "@/app/zods/params";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { ReportSchema } from "@/app/zods/db/report";
+import { ContactSchema } from "@/app/zods/db/contact";
 
 export async function GET(
   req: NextRequest,
@@ -48,7 +48,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const parsedBody = ReportSchema["patch"].parse(body);
+    const parsedBody = ContactSchema["patch"].parse(body);
     const fields = [];
     const values = [];
     for (const [key, value] of Object.entries(parsedBody)) {
@@ -57,10 +57,10 @@ export async function PUT(
     }
     values.push(params.contactID);
 
-    const sql = `UPDATE Report SET ${fields.join(", ")} WHERE ID = ?`;
+    const sql = `UPDATE Contact SET ${fields.join(", ")} WHERE ID = ?`;
     await queryDatabase(sql, values);
 
-    return NextResponse.json({ message: "Report updated successfully" });
+    return NextResponse.json({ message: "Contact updated successfully" });
   } catch (error) {
     return handleError(error);
   }

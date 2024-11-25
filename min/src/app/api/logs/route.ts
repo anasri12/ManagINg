@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== "Admin") {
+    if (!session || session.user.role === "User") {
       return NextResponse.json({ message: "Access Denied" }, { status: 403 });
     }
 

@@ -8,6 +8,8 @@ const FullLogSchema = z.object({
   Status: z.number().int(),
   Response_Time: z.number().int(),
   CreatedAt: z.date(),
+  RequestCount: z.number().int(),
+  AvgResponseTime: z.number(),
 });
 
 const PostLogSchema = FullLogSchema.omit({
