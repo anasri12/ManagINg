@@ -15,6 +15,8 @@ const FullLogSchema = z.object({
 const PostLogSchema = FullLogSchema.omit({
   ID: true,
   CreatedAt: true,
+  RequestCount: true,
+  AvgResponseTime: true,
 });
 
 type FullLogInterface = z.infer<typeof FullLogSchema>;
