@@ -97,7 +97,6 @@ const NewInventory = () => {
               },
               body: JSON.stringify({
                 Permission: collaborator.permission,
-                Status: "Pending", // Default status for new invitations
                 Inventory_ID: inventoryID,
                 Owner_ID: session.user.id,
                 Collaborator_Username: collaborator.username,

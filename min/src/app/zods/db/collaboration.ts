@@ -16,10 +16,10 @@ const FullCollaborationSchema = z.object({
 
 const PostCollaborationSchema = z.object({
   Permission: z.enum(["View", "Edit"]),
-  Status: z.enum(["Pending", "Accepted", "Rejected"]),
+  Status: z.enum(["Pending", "Accepted", "Rejected"]).optional(),
   Inventory_ID: z.number().int(),
   Owner_ID: z.string(),
-  Collaborator_ID: z.string().nullable(),
+  Collaborator_ID: z.string().nullable().optional(),
   Collaborator_Username: z.string(),
 });
 
