@@ -162,3 +162,120 @@ export async function GET(
     );
   }
 }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { userID: string; personalInventoryID: number } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.id !== params.userID) {
+      return NextResponse.json({ message: "Access Denied" }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const parsedBody = PersonalInventorySchema["patch"].parse(body);
+
+    if (!parsedBody || Object.keys(parsedBody).length === 0) {
+      return NextResponse.json(
+        { message: "No data provided for update" },
+        { status: 400 }
+      );
+    }
+
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    for (const [key, value] of Object.entries(parsedBody)) {
+      fields.push(`${key} = ?`);
+      values.push(value);
+    }
+
+    values.push(params.personalInventoryID, params.userID);
+
+    const sql = `
+        UPDATE Personal_Inventory
+        SET ${fields.join(", ")}, UpdatedAt = NOW()
+        WHERE ID = ? AND Owner_ID = ?
+      `;
+
+    const result = await queryDatabase<ResultSetHeader>(sql, values);
+
+    if (Array.isArray(result)) {
+      throw new Error(
+        "Unexpected query result: Expected a ResultSetHeader, but got an array."
+      );
+    }
+
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { message: "No matching personal inventory found or update failed" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      message: "Personal Inventory updated successfully",
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: "Validation Error", errors: error.errors },
+        { status: 400 }
+      );
+    }
+
+    console.error("Error updating personal inventory:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { userID: string; personalInventoryID: number } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.id !== params.userID) {
+      return NextResponse.json({ message: "Access Denied" }, { status: 403 });
+    }
+
+    const sql = `
+        DELETE FROM Personal_Inventory
+        WHERE ID = ? AND Owner_ID = ?
+      `;
+
+    const result = await queryDatabase<ResultSetHeader>(sql, [
+      params.personalInventoryID,
+      params.userID,
+    ]);
+
+    if (Array.isArray(result)) {
+      throw new Error(
+        "Unexpected query result: Expected a ResultSetHeader, but got an array."
+      );
+    }
+
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { message: "No matching personal inventory found or deletion failed" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      message: "Personal Inventory deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting personal inventory:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}

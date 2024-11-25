@@ -116,3 +116,90 @@ export async function GET(
     );
   }
 }
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { userID: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.id !== params.userID) {
+      return NextResponse.json({ message: "Access Denied" }, { status: 403 });
+    }
+
+    const body = await req.json();
+
+    // Validate the request body using the appropriate schema
+    const parsedBody = OrganizationSchema["post"].parse(body);
+
+    // Generate a unique 20-character alphanumeric code for the organization
+    const generateOrganizationCode = () => {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let code = "";
+      for (let i = 0; i < 20; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    };
+
+    let organizationCode = generateOrganizationCode();
+
+    // Ensure the code is unique by checking the database
+    let isUnique = false;
+    const sqlCheckCode = `SELECT COUNT(*) AS count FROM Organization WHERE Code = ?`;
+
+    while (!isUnique) {
+      const result = (await queryDatabase(sqlCheckCode, [
+        organizationCode,
+      ])) as { count: number }[];
+
+      if (result[0]?.count === 0) {
+        isUnique = true;
+      } else {
+        organizationCode = generateOrganizationCode();
+      }
+    }
+
+    // Insert the organization into the database
+    const sqlInsertOrganization = `
+        INSERT INTO Organization (Code, Name, Description, CreatedAt, UpdatedAt)
+        VALUES (?, ?, ?, NOW(), NOW())
+      `;
+
+    const result = await queryDatabase(sqlInsertOrganization, [
+      organizationCode,
+      parsedBody.Name,
+      parsedBody.Description,
+    ]);
+
+    if (Array.isArray(result)) {
+      throw new Error(
+        "Unexpected query result: Expected a ResultSetHeader, but got an array."
+      );
+    }
+
+    if (result.affectedRows === 0) {
+      throw new Error("Failed to insert organization.");
+    }
+
+    return NextResponse.json({
+      message: "Organization created successfully",
+      organizationCode: organizationCode,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.errors);
+      return NextResponse.json(
+        { message: "Validation failed", errors: error.errors },
+        { status: 400 }
+      );
+    }
+
+    console.error("Error creating organization:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}

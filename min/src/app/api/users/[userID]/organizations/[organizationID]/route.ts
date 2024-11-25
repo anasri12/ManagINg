@@ -4,6 +4,7 @@ import {
   OrganizationWithMemberFields,
   OrganizationWithMemberMaps,
 } from "@/app/utils/mapfields/organization";
+import { OrganizationSchema } from "@/app/zods/db/organization";
 import { OrganizationWithMemberSchema } from "@/app/zods/db/subquery/organizationWithMember";
 import { QueryOnlySchema } from "@/app/zods/query";
 import { getServerSession } from "next-auth";
@@ -114,6 +115,119 @@ export async function GET(
     }
 
     console.error("Error fetching organizations:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { userID: string; organizationID: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.id !== params.userID) {
+      return NextResponse.json({ message: "Access Denied" }, { status: 403 });
+    }
+
+    const body = await req.json();
+
+    // Validate the request body
+    const parsedBody = OrganizationSchema["patch"].parse(body);
+
+    if (!parsedBody || Object.keys(parsedBody).length === 0) {
+      return NextResponse.json(
+        { message: "No data provided for update" },
+        { status: 400 }
+      );
+    }
+
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    for (const [key, value] of Object.entries(parsedBody)) {
+      fields.push(`${key} = ?`);
+      values.push(value);
+    }
+
+    // Add the organization ID to the query parameters
+    values.push(params.organizationID);
+
+    const sql = `
+        UPDATE Organization
+        SET ${fields.join(", ")}, UpdatedAt = NOW()
+        WHERE Code = ?
+      `;
+
+    const result = await queryDatabase(sql, values);
+
+    if (Array.isArray(result)) {
+      throw new Error(
+        "Unexpected query result: Expected a ResultSetHeader, but got an array."
+      );
+    }
+
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { message: "No matching organization found or update failed" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ message: "Organization updated successfully" });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: "Validation Error", errors: error.errors },
+        { status: 400 }
+      );
+    }
+
+    console.error("Error updating organization:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { userID: string; organizationID: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.id !== params.userID) {
+      return NextResponse.json({ message: "Access Denied" }, { status: 403 });
+    }
+
+    const sql = `
+        DELETE FROM Organization
+        WHERE Code = ?
+      `;
+
+    const result = await queryDatabase(sql, [params.organizationID]);
+
+    if (Array.isArray(result)) {
+      throw new Error(
+        "Unexpected query result: Expected a ResultSetHeader, but got an array."
+      );
+    }
+
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { message: "No matching organization found or deletion failed" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ message: "Organization deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting organization:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }
