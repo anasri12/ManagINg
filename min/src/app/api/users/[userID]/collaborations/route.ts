@@ -75,7 +75,7 @@ export async function GET(
       .join(", ");
 
     const conditions: string[] = [];
-    const filter_params: any[] = [];
+    const filter_params: unknown[] = [];
 
     conditions.push("(c.Owner_ID = ? OR c.Collaborator_ID = ?)");
     filter_params.push(params.userID, params.userID);
@@ -100,7 +100,7 @@ export async function GET(
     console.log("SQL Query:", sql);
     console.log("Query Params:", filter_params);
 
-    const collaborations = await queryDatabase<any[]>(sql, filter_params);
+    const collaborations = await queryDatabase<unknown>(sql, filter_params);
 
     if (!Array.isArray(collaborations)) {
       throw new Error(
@@ -150,6 +150,9 @@ export async function POST(
   { params }: { params: { userID: string } }
 ) {
   try {
+    console.log(
+      "--------------------------------------------------------------------"
+    );
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.id !== params.userID) {
@@ -163,7 +166,7 @@ export async function POST(
 
     // Fetch the Collaborator ID using their username
     const fetchCollaboratorSQL = `SELECT ID FROM User WHERE Username = ?`;
-    const collaboratorResult = await queryDatabase<any>(
+    const collaboratorResult = await queryDatabase<{ ID: string }>(
       fetchCollaboratorSQL,
       [parsedBody.Collaborator_Username] // Assume the body contains `Collaborator_Username`
     );
@@ -186,13 +189,12 @@ export async function POST(
     // Proceed with inserting the collaboration record
     const sql = `
           INSERT INTO Collaboration 
-          (Permission, Status, Inventory_ID, Owner_ID, Collaborator_ID) 
-          VALUES (?, ?, ?, ?, ?)
+          (Permission, Inventory_ID, Owner_ID, Collaborator_ID) 
+          VALUES (?, ?, ?, ?)
         `;
 
     const result = await queryDatabase<ResultSetHeader>(sql, [
       parsedBody.Permission,
-      parsedBody.Status,
       parsedBody.Inventory_ID,
       params.userID,
       collaboratorID, // Use the fetched collaborator ID
