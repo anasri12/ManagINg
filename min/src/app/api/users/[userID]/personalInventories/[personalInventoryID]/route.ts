@@ -2,6 +2,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { queryDatabase } from "@/app/utils/db";
 import { PersonalInventoryFields } from "@/app/utils/mapfields/personalInventory";
 import { PersonalInventorySchema } from "@/app/zods/db/personalInventory";
+import { UserInterface } from "@/app/zods/db/user";
 import { QueryOnlySchema } from "@/app/zods/query";
 import { ResultSetHeader } from "mysql2/promise";
 import { getServerSession } from "next-auth";
@@ -36,8 +37,14 @@ export async function GET(
     if (!selectedFields.includes("Owner_Username")) {
       selectedFields.push("Owner_Username");
     }
+    if (!selectedFields.includes("Collaboration_ID")) {
+      selectedFields.push("Collaboration_ID");
+    }
     if (!selectedFields.includes("Collaborator_Username")) {
       selectedFields.push("Collaborator_Username");
+    }
+    if (!selectedFields.includes("Collaborator_Permission")) {
+      selectedFields.push("Collaborator_Permission");
     }
     if (!selectedFields.includes("UpdatedBy_Username")) {
       selectedFields.push("UpdatedBy_Username");
@@ -50,7 +57,9 @@ export async function GET(
         ![
           ...PersonalInventoryFields,
           "Owner_Username",
+          "Collaboration_ID",
           "Collaborator_Username",
+          "Collaborator_Permission",
           "UpdatedBy_Username",
         ].includes(field)
     );
@@ -84,8 +93,12 @@ export async function GET(
         switch (field) {
           case "Owner_Username":
             return "owner.Username AS Owner_Username";
+          case "Collaboration_ID":
+            return `GROUP_CONCAT(c.ID) AS Collaboration_ID`; // For MySQL
           case "Collaborator_Username":
             return `GROUP_CONCAT(collaborator.Username) AS Collaborator_Username`; // For MySQL
+          case "Collaborator_Permission":
+            return `GROUP_CONCAT(c.Permission) AS Collaborator_Permission`; // For MySQL
           case "UpdatedBy_Username":
             return "updatedBy.Username AS UpdatedBy_Username";
           default:
@@ -119,8 +132,14 @@ export async function GET(
     // Transform the Collaborator_Username field from a string to an array
     const transformedData = personalInventories.map((inventory) => ({
       ...inventory,
+      Collaboration_ID: inventory.Collaboration_ID
+        ? inventory.Collaboration_ID.split(",") // Split the string into an array
+        : [],
       Collaborator_Username: inventory.Collaborator_Username
         ? inventory.Collaborator_Username.split(",") // Split the string into an array
+        : [],
+      Collaborator_Permission: inventory.Collaborator_Permission
+        ? inventory.Collaborator_Permission.split(",") // Split the string into an array
         : [],
     }));
 
@@ -184,12 +203,18 @@ export async function PATCH(
       );
     }
 
+    // Update the personal inventory fields
     const fields: string[] = [];
     const values: any[] = [];
 
     for (const [key, value] of Object.entries(parsedBody)) {
-      fields.push(`${key} = ?`);
-      values.push(value);
+      if (key === "Input_Enable" && typeof value === "object") {
+        fields.push(`${key} = ?`);
+        values.push(JSON.stringify(value));
+      } else if (key !== "Collaborators") {
+        fields.push(`${key} = ?`);
+        values.push(value);
+      }
     }
 
     values.push(params.personalInventoryID, params.userID);
@@ -215,8 +240,84 @@ export async function PATCH(
       );
     }
 
+    // Function to validate collaborator IDs
+    const validateCollaboratorUsername = async (
+      collaboratorUsername: string
+    ) => {
+      const checkSql = `SELECT ID FROM User WHERE Username = ?`;
+      const result = await queryDatabase<UserInterface["full"]>(checkSql, [
+        collaboratorUsername,
+      ]);
+      if (Array.isArray(result) && result.length > 0) {
+        const Collaborator_ID = result[0].ID;
+        return Collaborator_ID;
+      } else return false;
+    };
+
+    // Update collaborators if provided
+    if (parsedBody.Collaborators) {
+      const { update, delete: toDelete, add } = parsedBody.Collaborators;
+
+      // Update collaborators
+      if (update && update.length > 0) {
+        for (const collaborator of update) {
+          const updateSql = `
+              UPDATE Collaboration
+              SET Permission = ?
+              WHERE ID = ?
+            `;
+          await queryDatabase(updateSql, [
+            collaborator.permission,
+            collaborator.collaborationID,
+          ]);
+        }
+      }
+
+      // Delete collaborators
+      if (toDelete && toDelete.length > 0) {
+        for (const collaborator of toDelete) {
+          const deleteSql = `
+              DELETE FROM Collaboration
+              WHERE ID = ?
+            `;
+          await queryDatabase(deleteSql, [collaborator.collaborationID]);
+        }
+      }
+
+      // Add new collaborators
+      if (add && add.length > 0) {
+        for (const collaborator of add) {
+          const GetCollaboratorID = await validateCollaboratorUsername(
+            collaborator.username
+          );
+
+          console.log(GetCollaboratorID);
+
+          if (!GetCollaboratorID) {
+            return NextResponse.json(
+              {
+                message: `Collaborator with ID '${collaborator.username}' does not exist.`,
+              },
+              { status: 400 }
+            );
+          }
+
+          const insertSql = `
+              INSERT INTO Collaboration (Collaborator_ID, Permission, Inventory_ID, Owner_ID)
+              VALUES (?, ?, ?, ?)
+            `;
+          await queryDatabase(insertSql, [
+            GetCollaboratorID,
+            collaborator.permission,
+            params.personalInventoryID,
+            params.userID,
+          ]);
+        }
+      }
+    }
+
     return NextResponse.json({
-      message: "Personal Inventory updated successfully",
+      message: "Personal Inventory and Collaborators updated successfully",
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

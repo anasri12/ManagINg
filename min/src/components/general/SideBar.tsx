@@ -35,13 +35,13 @@ export default function SideBar({
           const data = await response.json();
           setGroups(data);
         }
-      } catch (err: any) {
-        console.log(err.message);
+      } catch (err: unknown) {
+        console.log(err);
       }
     };
 
     fetchGroups();
-  }, [userID]);
+  }, [session, userID]);
   return (
     <Sheet>
       <SheetTrigger>
@@ -113,9 +113,6 @@ export default function SideBar({
 
           <Link href={"/addGroup"} className="mb-2">
             Add/Create Group
-          </Link>
-          <Link href={"/setting"} className="mb-2">
-            Setting
           </Link>
           <SignOutButton />
         </div>

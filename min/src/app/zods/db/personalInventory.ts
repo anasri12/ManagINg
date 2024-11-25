@@ -14,6 +14,33 @@ const InputEnableSchema = z.object({
     ),
 });
 
+const CollaboratorsSchema = z.object({
+  update: z
+    .array(
+      z.object({
+        collaborationID: z.string().nonempty("collaborationID is required"),
+        username: z.string(),
+        permission: z.enum(["View", "Edit"]),
+      })
+    )
+    .optional(),
+  delete: z
+    .array(
+      z.object({
+        collaborationID: z.string().nonempty("collaborationID is required"),
+      })
+    )
+    .optional(),
+  add: z
+    .array(
+      z.object({
+        username: z.string(),
+        permission: z.enum(["View", "Edit"]),
+      })
+    )
+    .optional(),
+});
+
 const FullPersonalInventorySchema = z.object({
   ID: z.number(),
   Name: z.string(),
@@ -23,8 +50,10 @@ const FullPersonalInventorySchema = z.object({
   CreatedAt: z.date(),
   UpdatedAt: z.date(),
   Input_Enable: InputEnableSchema,
+  Collaboration_ID: z.array(z.string()),
   Collaborator_Number: z.number(),
   Collaborator_Username: z.array(z.string()),
+  Collaborator_Permission: z.array(z.enum(["View", "Edit"])),
   UpdatedBy: z.string(),
   UpdatedBy_Username: z.string(),
 });
@@ -40,7 +69,12 @@ const PostPersonalInventorySchema = z.object({
 const PatchPersonalInventorySchema = PostPersonalInventorySchema.omit({
   Owner_ID: true,
 })
-  .merge(z.object({ Collaborator_Number: z.number() }))
+  .merge(
+    z.object({
+      Collaborator_Number: z.number().optional(),
+      Collaborators: CollaboratorsSchema.optional(),
+    })
+  )
   .partial();
 
 type FullPersonalInventoryInterface = z.infer<

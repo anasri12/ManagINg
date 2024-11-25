@@ -19,7 +19,11 @@ const PostUserSchema = z.object({
 });
 
 const PatchUserSchema = PostUserSchema.merge(
-  z.object({ Role: z.enum(["Admin", "User", "Developer"]) })
+  z.object({
+    Role: z.enum(["Admin", "User", "Developer"]),
+    Password_Hash: z.string(),
+    Current_Password: z.string(),
+  })
 ).partial();
 
 type FullUserInterface = z.infer<typeof FullUserSchema>;

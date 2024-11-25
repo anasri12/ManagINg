@@ -1,38 +1,98 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { ReportInterface } from "@/app/zods/db/report";
 
 interface Message {
   id: number;
   content: string;
-  status: "On process" | "Problem solved";
+  status: "Open" | "Resolved";
   sentDate: string;
-  reply?: {
-    content: string;
-    admin: string;
-    replyDate: string;
-  };
+  resolvedAt?: string | null;
+  response?: string | null;
 }
 
-export default function UserInbox() {
+export default function ContactAdmin() {
+  const { data: session } = useSession();
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const handleSubmit = () => {
-    if (message.trim() === "") return;
+  const userID = session?.user.id;
 
-    const newMessage: Message = {
-      id: messages.length + 1,
-      content: message,
-      status: "On process",
-      sentDate: new Date().toLocaleString(),
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!userID) return;
+
+      try {
+        const response = await fetch(`/api/users/${userID}/reports`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch messages.");
+        }
+
+        const data = await response.json();
+        const formattedMessages = data.map((msg: ReportInterface["full"]) => ({
+          id: msg.ID,
+          content: msg.Message,
+          status: msg.Status,
+          sentDate: new Date(msg.CreatedAt).toLocaleString(),
+          resolvedAt: msg.ResolvedAt
+            ? new Date(msg.ResolvedAt).toLocaleString()
+            : null,
+          response: msg.Response,
+        }));
+        setMessages(formattedMessages);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setMessages((prevMessages) => [newMessage, ...prevMessages]);
-    setMessage("");
+    fetchMessages();
+  }, [userID]);
+
+  const handleSubmit = async () => {
+    if (message.trim() === "") return;
+
+    try {
+      const response = await fetch(`/api/users/${userID}/reports`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          User_ID: userID,
+          Message: message,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit the message.");
+      }
+
+      const newMessage = await response.json();
+      setMessages((prevMessages) => [
+        {
+          id: newMessage.reportID,
+          content: message,
+          status: "Open",
+          sentDate: new Date().toLocaleString(),
+        },
+        ...prevMessages,
+      ]);
+      setMessage("");
+    } catch (error) {
+      console.error("Error submitting message:", error);
+    }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-28 py-6 px-6">
@@ -57,16 +117,14 @@ export default function UserInbox() {
           <div
             key={msg.id}
             className={`flex flex-col rounded-lg shadow-md p-4 border ${
-              msg.status === "Problem solved"
+              msg.status === "Resolved"
                 ? "bg-green-100 border-green-300"
                 : "bg-red-100 border-red-300"
             }`}
           >
             <p
               className={`font-semibold ${
-                msg.status === "Problem solved"
-                  ? "text-green-700"
-                  : "text-red-700"
+                msg.status === "Resolved" ? "text-green-700" : "text-red-700"
               }`}
             >
               {msg.status}
@@ -75,15 +133,15 @@ export default function UserInbox() {
             <p className="text-sm text-gray-500 mt-2">
               Sent date: {msg.sentDate}
             </p>
-            {msg.reply && (
-              <div className="mt-2 text-gray-800">
-                <p className="text-blue-700">
-                  Admin reply: {msg.reply.content}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Replied by: {msg.reply.admin} on {msg.reply.replyDate}
-                </p>
-              </div>
+            {msg.resolvedAt && (
+              <p className="text-sm text-gray-500">
+                Resolved date: {msg.resolvedAt}
+              </p>
+            )}
+            {msg.response && (
+              <p className="text-sm text-gray-700 mt-1">
+                Admin Response: {msg.response}
+              </p>
             )}
           </div>
         ))}

@@ -36,8 +36,14 @@ export async function GET(
     if (!selectedFields.includes("Owner_Username")) {
       selectedFields.push("Owner_Username");
     }
+    if (!selectedFields.includes("Collaboration_ID")) {
+      selectedFields.push("Collaboration_ID");
+    }
     if (!selectedFields.includes("Collaborator_Username")) {
       selectedFields.push("Collaborator_Username");
+    }
+    if (!selectedFields.includes("Collaborator_Permission")) {
+      selectedFields.push("Collaborator_Permission");
     }
     if (!selectedFields.includes("UpdatedBy_Username")) {
       selectedFields.push("UpdatedBy_Username");
@@ -50,7 +56,9 @@ export async function GET(
         ![
           ...PersonalInventoryFields,
           "Owner_Username",
+          "Collaboration_ID",
           "Collaborator_Username",
+          "Collaborator_Permission",
           "UpdatedBy_Username",
         ].includes(field)
     );
@@ -81,8 +89,12 @@ export async function GET(
         switch (field) {
           case "Owner_Username":
             return "owner.Username AS Owner_Username";
+          case "Collaboration_ID":
+            return `GROUP_CONCAT(c.ID) AS Collaboration_ID`; // For MySQL
           case "Collaborator_Username":
             return `GROUP_CONCAT(collaborator.Username) AS Collaborator_Username`; // For MySQL
+          case "Collaborator_Permission":
+            return `GROUP_CONCAT(c.Permission) AS Collaborator_Permission`; // For MySQL
           case "UpdatedBy_Username":
             return "updatedBy.Username AS UpdatedBy_Username";
           default:
@@ -116,8 +128,14 @@ export async function GET(
     // Transform the Collaborator_Username field from a string to an array
     const transformedData = personalInventories.map((inventory) => ({
       ...inventory,
+      Collaboration_ID: inventory.Collaboration_ID
+        ? inventory.Collaboration_ID.split(",") // Split the string into an array
+        : [],
       Collaborator_Username: inventory.Collaborator_Username
         ? inventory.Collaborator_Username.split(",") // Split the string into an array
+        : [],
+      Collaborator_Permission: inventory.Collaborator_Permission
+        ? inventory.Collaborator_Permission.split(",") // Split the string into an array
         : [],
     }));
 

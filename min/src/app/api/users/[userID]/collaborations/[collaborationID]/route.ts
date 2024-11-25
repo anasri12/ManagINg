@@ -7,6 +7,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { CollaborationFields } from "@/app/utils/mapfields/collaboration";
 import { CollaborationSchema } from "@/app/zods/db/collaboration";
 import { ResultSetHeader } from "mysql2/promise";
+import { useSearchParams } from "next/navigation";
 
 export async function GET(
   req: NextRequest,
@@ -94,8 +95,8 @@ export async function PATCH(
 
     const sql = `
         UPDATE Collaboration
-        SET ${fields.join(", ")}, UpdatedAt = NOW()
-        WHERE ID = ? AND (Owner_ID = ? OR Collaborator_ID = ?)
+        SET ${fields.join(", ")}, ResolvedAt = NOW()
+        WHERE ID = ? AND Collaborator_ID = ?
       `;
 
     const result = await queryDatabase<ResultSetHeader>(sql, values);

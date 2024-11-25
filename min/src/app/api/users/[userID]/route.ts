@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { queryDatabase } from "@/app/utils/db";
 import { UserIDSchema } from "@/app/zods/params";
-import { UserSchema } from "@/app/zods/db/user";
+import { UserInterface, UserSchema } from "@/app/zods/db/user";
 import { QueryUserSchema } from "@/app/zods/query";
 import { UserFields } from "@/app/utils/mapfields/user";
 
@@ -57,7 +57,7 @@ export async function GET(
     const selectClause = selectedFields.join(", ");
 
     const conditions: string[] = [];
-    const filter_params: any[] = [];
+    const filter_params: unknown[] = [];
 
     conditions.push("ID = ?");
     filter_params.push(params.userID);
@@ -134,52 +134,84 @@ export async function PATCH(
   { params }: { params: { userID: string } }
 ) {
   try {
-    UserIDSchema.parse(params);
-
+    // Parse and validate user ID
+    const userID = params.userID;
     const session = await getServerSession(authOptions);
 
     if (
       !session ||
-      !(session.user.role === "Admin" || session.user.id === params.userID)
+      !(session.user.role === "Admin" || session.user.id === userID)
     ) {
       return NextResponse.json({ message: "Access Denied" }, { status: 403 });
     }
 
+    // Parse and validate request body
     const body = await req.json();
-    const parsedBody = UserSchema["patch"].parse(body);
+    const { Current_Password, Password, ...updateFields } =
+      UserSchema["patch"].parse(body);
 
-    if (!parsedBody || Object.keys(parsedBody).length === 0) {
+    if (Object.keys(updateFields).length === 0 && !Password) {
       return NextResponse.json(
-        { message: "No data provided for update" },
+        { message: "No fields provided for update." },
         { status: 400 }
       );
     }
 
+    // Fetch the current password hash
+    const fetchPasswordSql = `SELECT Password_Hash FROM User WHERE ID = ?`;
+    const user = await queryDatabase<UserInterface["full"]>(fetchPasswordSql, [
+      userID,
+    ]);
+
+    if (!Array.isArray(user) || user.length === 0) {
+      return NextResponse.json({ message: "User not found." }, { status: 404 });
+    }
+
+    const { Password_Hash } = user[0];
+
+    // Verify current password if Password update is requested
+    if (Password && !Current_Password) {
+      return NextResponse.json(
+        { message: "Current password is required to update the password." },
+        { status: 400 }
+      );
+    }
+
+    if (Password && Current_Password) {
+      const isPasswordValid = await bcrypt.compare(
+        Current_Password,
+        Password_Hash
+      );
+      if (!isPasswordValid) {
+        return NextResponse.json(
+          { message: "Current password is incorrect." },
+          { status: 403 }
+        );
+      }
+      // Hash the new password for update
+      updateFields["Password_Hash"] = await bcrypt.hash(Password, 10);
+    }
+
+    // Dynamically prepare the update SQL
     const fields = [];
     const values = [];
 
-    for (const [key, value] of Object.entries(parsedBody)) {
-      if (key === "password") {
-        const hashedPassword = await bcrypt.hash(value as string, 10);
-        fields.push(`Password_Hash = ?`);
-        values.push(hashedPassword);
-      } else {
-        fields.push(`${key} = ?`);
-        values.push(value);
-      }
+    for (const [key, value] of Object.entries(updateFields)) {
+      fields.push(`${key} = ?`);
+      values.push(value);
     }
 
-    values.push(params.userID);
+    values.push(userID);
 
     const sql = `
       UPDATE User
-      SET ${fields.join(", ")}
+      SET ${fields.join(", ")}, UpdatedAt = NOW()
       WHERE ID = ?
     `;
 
     await queryDatabase(sql, values);
 
-    return NextResponse.json({ message: "User updated successfully" });
+    return NextResponse.json({ message: "User updated successfully." });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

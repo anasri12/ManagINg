@@ -94,7 +94,7 @@ export async function GET(
         LEFT JOIN Personal_Inventory i ON c.Inventory_ID = i.ID
         LEFT JOIN User owner ON c.Owner_ID = owner.ID
         LEFT JOIN User collaborator ON c.Collaborator_ID = collaborator.ID
-        ${whereClause}
+        ${whereClause} ORDER BY c.ID DESC
       `;
 
     console.log("SQL Query:", sql);
