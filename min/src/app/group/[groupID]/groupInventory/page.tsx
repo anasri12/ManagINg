@@ -1,6 +1,5 @@
 "use client";
 
-import { PersonalInventoryInterface } from "@/app/zods/db/personalInventory";
 import Loading from "@/components/general/Loading";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
@@ -17,12 +16,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { fetchWithLogging } from "@/app/utils/log";
+import { GroupInventoryInterface } from "@/app/zods/db/groupInventory";
+import { MemberIDOrganization } from "@/app/api/organizations/utils";
 
-export default function GroupInventory() {
-  const { data: session } = useSession();
+export default function GroupInventory({
+  params,
+}: {
+  params: { groupID: string };
+}) {
+  const { data: session, status } = useSession();
+  const userID = session?.user.id;
   const router = useRouter();
   const [groupInventories, setGroupInventories] = useState<
-    PersonalInventoryInterface["full"][]
+    GroupInventoryInterface["full"][]
   >([]);
   const [loading, setLoading] = useState(true);
   const [globalFilter, setGlobalFilter] = useState<string>("");
@@ -31,17 +38,16 @@ export default function GroupInventory() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (session) {
-          const response = await fetch(
-            `/api/users/${session?.user.id}/groupInventories`
-          );
-          if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
-          }
-          const data = await response.json();
-          setGroupInventories(data);
-          setLoading(false);
-        }
+        if (!userID) return;
+        const groupInventoryData = await fetchWithLogging<
+          GroupInventoryInterface["full"][]
+        >(
+          `/api/organizations/${params.groupID}/groupInventories`,
+          { method: "GET" },
+          session.user.id
+        );
+        setGroupInventories(groupInventoryData);
+        setLoading(false);
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);
@@ -53,7 +59,7 @@ export default function GroupInventory() {
     };
 
     fetchData();
-  }, [session?.user.id]);
+  }, [userID]);
 
   if (loading) {
     return <Loading />;
@@ -63,23 +69,21 @@ export default function GroupInventory() {
     return <div>Error: {error}</div>;
   }
 
-  // Handle inventory deletion
-  const handleDelete = async (groupInventoryID: number) => {
+  const handleDelete = async (personalInventoryID: number) => {
+    if (!userID) return;
     const confirmed = confirm(
       "Are you sure you want to delete this inventory?"
     );
     if (confirmed) {
       try {
-        const response = await fetch(
-          `/api/users/${session?.user.id}/groupInventories/${groupInventoryID}`,
+        const deletePersonalInventory = await fetchWithLogging(
+          `/api/users/${userID}/personalInventories/${personalInventoryID}`,
           {
             method: "DELETE",
-          }
+          },
+          userID
         );
-
-        if (!response.ok) {
-          throw new Error("Failed to delete inventory");
-        }
+        console.log(deletePersonalInventory);
 
         window.location.reload();
       } catch (error) {
@@ -89,16 +93,13 @@ export default function GroupInventory() {
     }
   };
 
-  // Filter data based on the global search filter
   const filteredData = groupInventories.filter((groupInventory) =>
     groupInventory.Name.toLowerCase().includes(globalFilter.toLowerCase())
   );
 
   return (
     <div className="container mx-auto py-10 px-4">
-      <div className="font-inria font-normal mb-4 text-5xl">
-        Group Inventory
-      </div>
+      <div className="font-inria font-normal mb-4 text-5xl">My Inventory</div>
       <div className="rounded-md border shadow-sm bg-white">
         <div className="flex items-center py-4 px-6">
           {/* Search Box */}
@@ -122,8 +123,9 @@ export default function GroupInventory() {
         <Table className="w-full">
           <TableHeader>
             <TableRow>
-              <TableHead>NO.</TableHead>
+              <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>Colab Users</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Last Edit Time</TableHead>
               <TableHead>Last Edit By</TableHead>
@@ -133,31 +135,19 @@ export default function GroupInventory() {
 
           <TableBody>
             {filteredData.length > 0 ? (
-              filteredData.map((groupInventory, index) => (
+              filteredData.map(async (groupInventory) => (
                 <TableRow
                   key={groupInventory.ID}
-                  className={`cursor-pointer hover:bg-gray-100 ${
-                    session?.user.id !== groupInventory.Owner_ID
-                      ? "bg-red-100"
-                      : ""
-                  }`}
-                  onClick={() => router.push(`/newGroup/${groupInventory.ID}`)}
+                  className={`cursor-pointer hover:bg-gray-100`}
+                  onClick={() =>
+                    router.push(
+                      `group/${params.groupID}/groupInventory/${groupInventory.ID}`
+                    )
+                  }
                 >
-                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{groupInventory.ID}</TableCell>
                   <TableCell>{groupInventory.Name}</TableCell>
-                  <TableCell>
-                    {groupInventory.Collaborator_Username.length !== 0 ? (
-                      <>
-                        {groupInventory.Collaborator_Username.map(
-                          (Member, index) => (
-                            <div key={index}>{Member}</div>
-                          )
-                        )}
-                      </>
-                    ) : (
-                      <div>-</div>
-                    )}
-                  </TableCell>
+                  <TableCell></TableCell>
                   <TableCell>{groupInventory.Description}</TableCell>
                   <TableCell>
                     {groupInventory.UpdatedAt

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Loading from "@/components/general/Loading";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { fetchWithLogging } from "@/app/utils/log";
 
 interface GroupMember {
   id: string;
@@ -12,8 +13,13 @@ interface GroupMember {
   toDelete?: boolean;
 }
 
-export default function EditGroup({ params }: { params: { groupId: string } }) {
+export default function EditGroup({
+  params,
+}: {
+  params: { organizationID: string };
+}) {
   const { data: session, status } = useSession();
+  const userID = session?.user.id;
   const router = useRouter();
 
   const [groupName, setGroupName] = useState<string>("");
@@ -27,20 +33,22 @@ export default function EditGroup({ params }: { params: { groupId: string } }) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Fetch group data on page load
   useEffect(() => {
     const fetchGroupData = async () => {
-      if (!params || !params.groupId) return;
+      if (!params?.organizationID) return;
 
       try {
-        const response = await fetch(`/api/groups/${params.groupId}`);
-        if (!response.ok)
-          throw new Error(`Error fetching group data: ${response.statusText}`);
+        const response = await fetch(
+          `/api/organizations/${params.organizationID}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch group data");
+        }
 
-        const group = await response.json();
-        setGroupName(group.name || "");
-        setDescription(group.description || "");
-        setMembers(group.members || []);
+        const groupData = await response.json();
+        setGroupName(groupData.Name || "");
+        setDescription(groupData.Description || "");
+        setMembers(groupData.members || []);
       } catch (error) {
         console.error("Error fetching group data:", error);
         alert("Failed to load group data.");
@@ -53,7 +61,7 @@ export default function EditGroup({ params }: { params: { groupId: string } }) {
   }, [params]);
 
   const handleAddMember = () => {
-    if (newMemberUsername.trim() === "") return;
+    if (!newMemberUsername.trim()) return;
 
     setNewMembers((prev) => [
       ...prev,
@@ -99,7 +107,7 @@ export default function EditGroup({ params }: { params: { groupId: string } }) {
   };
 
   const handleSubmit = async () => {
-    if (!session || !params?.groupId) {
+    if (!session || !params?.organizationID) {
       alert("You must be logged in to update the group.");
       return;
     }
@@ -109,33 +117,26 @@ export default function EditGroup({ params }: { params: { groupId: string } }) {
     try {
       const payload = {
         name: groupName,
-        description: description || null,
-        updatedBy: session.user.id,
+        description,
         members: {
           update: members
             .filter((member) => !member.toDelete)
-            .map((member) => ({
-              id: member.id,
-              username: member.username,
-              role: member.role,
-            })),
+            .map(({ id, username, role }) => ({ id, username, role })),
           delete: members
             .filter((member) => member.toDelete)
-            .map((member) => ({ id: member.id })),
-          add: newMembers.map((member) => ({
-            username: member.username,
-            role: member.role,
-          })),
+            .map(({ id }) => ({ id })),
+          add: newMembers.map(({ username, role }) => ({ username, role })),
         },
       };
 
-      const response = await fetch(`/api/groups/${params.groupId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `/api/organizations/${params.organizationID}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -145,7 +146,7 @@ export default function EditGroup({ params }: { params: { groupId: string } }) {
       }
 
       alert("Group updated successfully.");
-      router.push(`/groups/${params.groupId}`);
+      router.push(`/organizations/${params.organizationID}`);
     } catch (error) {
       console.error("Unexpected error:", error);
       alert("An unexpected error occurred. Please try again.");
@@ -154,7 +155,7 @@ export default function EditGroup({ params }: { params: { groupId: string } }) {
     }
   };
 
-  if (status === "loading" || isLoading) {
+  if (isLoading || status === "loading") {
     return <Loading />;
   }
 
