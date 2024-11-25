@@ -23,7 +23,12 @@ const PostCollaborationSchema = z.object({
   Collaborator_Username: z.string(),
 });
 
-const PatchCollaborationSchema = FullCollaborationSchema.partial();
+const PatchCollaborationSchema = PostCollaborationSchema.pick({
+  Permission: true,
+  Status: true,
+})
+  .merge(z.object({ ResolvedAt: z.date() }))
+  .partial();
 
 type FullCollaborationInterface = z.infer<typeof FullCollaborationSchema>;
 

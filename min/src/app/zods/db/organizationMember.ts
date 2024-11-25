@@ -2,14 +2,20 @@ import { z } from "zod";
 
 const FullOrganizationMemberSchema = z.object({
   ID: z.number(),
-  Role: z.string(),
+  Role: z.enum(["Founder", "Admin", "Staff", "View-Only"]),
   Organization_Code: z.string(),
   User_ID: z.string(),
 });
 
-const PostOrganizationMemberSchema = FullOrganizationMemberSchema;
+const PostOrganizationMemberSchema = z.object({
+  Role: z.enum(["Founder", "Admin", "Staff", "View-Only"]),
+  Organization_Code: z.string(),
+  User_ID: z.string(),
+});
 
-const PatchOrganizationMemberSchema = FullOrganizationMemberSchema.partial();
+const PatchOrganizationMemberSchema = PostOrganizationMemberSchema.pick({
+  Role: true,
+}).partial();
 
 type FullOrganizationMemberInterface = z.infer<
   typeof FullOrganizationMemberSchema

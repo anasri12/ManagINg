@@ -5,16 +5,26 @@ const FullOrganizationSchema = z.object({
   Name: z.string(),
   Description: z.string().nullable(),
   CreatedAt: z.date(),
-  UpdatedAt: z.date().optional(),
+  UpdatedAt: z.date(),
   Member_Number: z.number().int(),
   Inventory_Number: z.number().int(),
   Founder_ID: z.string(),
   UpdatedBy: z.string(),
 });
 
-const PostOrganizationSchema = FullOrganizationSchema;
+const PostOrganizationSchema = z.object({
+  Name: z.string(),
+  Description: z.string().nullable(),
+  Inventory_Number: z.number().int(),
+  Founder_ID: z.string(),
+  UpdatedBy: z.string(),
+});
 
-const PatchOrganizationSchema = FullOrganizationSchema.partial();
+const PatchOrganizationSchema = PostOrganizationSchema.omit({
+  Founder_ID: true,
+})
+  .merge(z.object({ Member_Number: z.number().int() }))
+  .partial();
 
 type FullOrganizationInterface = z.infer<typeof FullOrganizationSchema>;
 

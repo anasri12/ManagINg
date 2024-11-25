@@ -79,7 +79,9 @@ export async function GET(req: NextRequest) {
     console.log("Database Results:", users);
 
     if (!Array.isArray(users)) {
-      throw new Error("Unexpected query result: Expected an array, but got a ResultSetHeader.");
+      throw new Error(
+        "Unexpected query result: Expected an array, but got a ResultSetHeader."
+      );
     }
 
     const validatedUsers = selectedFields.includes("*")
@@ -123,8 +125,8 @@ export async function POST(req: NextRequest) {
 
     const parsedData = UserSchema["post"].parse(body);
 
-    const { username, email, password } = parsedData;
-    const userId = await registerUser(username, email, password, null);
+    const { Username, Email, Password } = parsedData;
+    const userId = await registerUser(Username, Email, Password, null);
 
     return NextResponse.json(
       { message: "User created successfully", userId },
