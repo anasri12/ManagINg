@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { ReportInterface } from "@/app/zods/db/report";
+import Loading from "@/components/general/Loading";
 
 interface Message {
   id: number;
@@ -91,7 +92,7 @@ export default function ContactAdmin() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   return (

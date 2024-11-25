@@ -23,6 +23,7 @@ export default function MySelectInventory({
     PersonalInventoryItemInterface["full"][]
   >([]);
   const [inputFields, setInputFields] = useState<string[]>([]);
+  const [header, setHeader] = useState<string>("My Inventory");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,19 +116,28 @@ export default function MySelectInventory({
 
           setDynamicColumns(filteredColumns);
 
+          const headerResponse = await fetch(
+            `/api/users/${userID}/personalInventories/${params.myInventoryID}`
+          );
+
           const itemsResponse = await fetch(
             `/api/users/${userID}/personalInventories/${params.myInventoryID}/personalInventoryItems`
           );
 
-          if (!itemsResponse.ok) {
+          if (!itemsResponse.ok || !headerResponse.ok) {
             throw new Error(
-              `Error fetching items: ${itemsResponse.statusText}`
+              `Error fetching header & items: ${itemsResponse.statusText}`
             );
           }
 
           const itemsData =
             (await itemsResponse.json()) as PersonalInventoryItemInterface["full"][];
+          const headerData =
+            (await headerResponse.json()) as PersonalInventoryInterface["full"][];
+
           setInventoryItems(itemsData);
+          setHeader(headerData[0].Name);
+
           setLoading(false);
         }
       } catch (err) {
@@ -149,7 +159,7 @@ export default function MySelectInventory({
         session={session}
         columns={dynamicColumns}
         data={inventoryItems}
-        title="My Inventory"
+        title={header}
         apiUrl={`/api/users/${session?.user.id}/personalInventories/${params.myInventoryID}/personalInventoryItems`}
         formFields={inputFields}
         userID={userID!}

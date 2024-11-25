@@ -120,7 +120,7 @@ export default function MyInventory() {
         <Table className="w-full">
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
+              <TableHead>NO.</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Colab Users</TableHead>
               <TableHead>Description</TableHead>
@@ -132,7 +132,7 @@ export default function MyInventory() {
 
           <TableBody>
             {filteredData.length > 0 ? (
-              filteredData.map((personalInventory) => (
+              filteredData.map((personalInventory, index) => (
                 <TableRow
                   key={personalInventory.ID}
                   className={`cursor-pointer hover:bg-gray-100 ${
@@ -144,7 +144,7 @@ export default function MyInventory() {
                     router.push(`/myInventory/${personalInventory.ID}`)
                   }
                 >
-                  <TableCell>{personalInventory.ID}</TableCell>
+                  <TableCell>{index + 1}</TableCell>
                   <TableCell>{personalInventory.Name}</TableCell>
                   <TableCell>
                     {personalInventory.Collaborator_Username.length !== 0 ? (

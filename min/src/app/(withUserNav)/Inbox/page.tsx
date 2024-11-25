@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
+import Loading from "@/components/general/Loading";
 
 export default function Inbox() {
   const { data: session } = useSession();
@@ -106,7 +107,7 @@ export default function Inbox() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   return (
