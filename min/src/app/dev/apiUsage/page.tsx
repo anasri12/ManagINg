@@ -10,48 +10,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UserInterface } from "@/app/zods/db/user";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
-export default function Users() {
+export default function API() {
   const [users, setUsers] = useState<UserInterface["full"][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/users");
-        if (!response.ok) {
-          throw new Error(`Error: ${response.statusText}`);
-        }
-        const data = await response.json();
-        setUsers(data);
-        setLoading(false);
-      } catch (error) {
-        if (error instanceof Error) {
-          setError(error.message);
-        } else {
-          setError("An unknown error occurred");
-        }
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
   return (
     <div className="container mx-28 py-6 px-6">
       {/* Header */}
-      <div className="font-inria text-5xl mb-8">Logs</div>
+      <div className="font-inria text-5xl mb-8">API Usage</div>
 
       {/* table */}
       <div className="rounded-md border shadow-sm bg-white">
@@ -60,12 +28,13 @@ export default function Users() {
             <Table className="w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Timestamp</TableHead>
+                  <TableHead>ID</TableHead>
                   <TableHead>User ID</TableHead>
-                  <TableHead>Transection ID</TableHead>
-                  <TableHead>Service</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Message</TableHead>
+                  <TableHead>Endpoint</TableHead>
+                  <TableHead>method</TableHead>
+                  <TableHead>Status code</TableHead>
+                  <TableHead>Response time</TableHead>
+                  <TableHead>Create at</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
