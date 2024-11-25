@@ -37,17 +37,17 @@ export default function UserInbox() {
   return (
     <div className="container mx-28 py-6 px-6">
       {/* Header */}
-      <div className="font-inria text-5xl font-bold mb-8">Inbox</div>
+      <div className="font-inria text-5xl font-bold mb-8">Admin Inbox</div>
 
       {/* Navigation Tabs */}
       <div className="flex gap-4 mb-6">
-        <Link href="/inbox">
+        <Link href="/admin/inboxAdmin">
           <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
             Notification
           </Button>
         </Link>
         <Button className="bg-red-600 text-white hover:bg-red-700 px-6 py-2">
-          Contact Admin
+          Contact developer
         </Button>
       </div>
 

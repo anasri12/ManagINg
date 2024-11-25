@@ -49,14 +49,6 @@ export default function Admin() {
             </Alert>
           </div>
         )}
-
-        {session && session.user.role === "Admin" ? (
-          <div className="mt-4 flex justify-center">
-            <Link href="/admin/users">
-              <Button variant="link">See All Users</Button>
-            </Link>
-          </div>
-        ) : null}
       </div>
     </>
   );
