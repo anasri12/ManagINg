@@ -254,9 +254,9 @@ export function DataTable<TData extends BaseRowData, TValue>({
   );
 
   return (
-    <div className="container mx-auto py-10 px-4">
+    <div className="container mx-auto  px-4">
       {title && (
-        <div className="font-inria font-normal mt-8 text-5xl pl-11 ">
+        <div className="font-inria font-normal mt-8 mb-6 text-5xl pl-11 ">
           {title}
         </div>
       )}

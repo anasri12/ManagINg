@@ -51,31 +51,7 @@ export default function Users() {
   return (
     <div className="container mx-28 py-6 px-6">
       {/* Header */}
-      <div className="font-inria text-5xl mb-8">Management</div>
-
-      {/* Navigation Tabs */}
-      <div className="flex gap-4 mb-6">
-        <Link href="/admin/management">
-          <Button className="bg-red-600 text-white hover:bg-red-700 px-6 py-2">
-            Users
-          </Button>
-        </Link>
-        <Link href="/admin/management/collaboration">
-          <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
-            Collaboration
-          </Button>
-        </Link>
-        <Link href="/admin/management/organization">
-          <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
-            Organization
-          </Button>
-        </Link>
-        <Link href="/admin/management/organizationMember">
-          <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
-            Organization member
-          </Button>
-        </Link>
-      </div>
+      <div className="font-inria text-5xl mb-8">Logs</div>
 
       {/* table */}
       <div className="rounded-md border shadow-sm bg-white">
@@ -84,12 +60,12 @@ export default function Users() {
             <Table className="w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Username</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Password</TableHead>
-                  <TableHead>Profile_Picture_URL</TableHead>
-                  <TableHead>Role</TableHead>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>User ID</TableHead>
+                  <TableHead>Transection ID</TableHead>
+                  <TableHead>Service</TableHead>
+                  <TableHead>Level</TableHead>
+                  <TableHead>Message</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -99,8 +75,6 @@ export default function Users() {
                     <TableCell>{user.Username}</TableCell>
                     <TableCell>{user.Email}</TableCell>
                     <TableCell>{user.Password_Hash}</TableCell>
-                    <TableCell>{user.Profile_Picture_URL ?? "-"}</TableCell>
-                    <TableCell>{user.Role}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

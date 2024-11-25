@@ -56,7 +56,7 @@ export default function Users() {
       {/* Navigation Tabs */}
       <div className="flex gap-4 mb-6">
         <Link href="/admin/management">
-          <Button className="bg-red-600 text-white hover:bg-red-700 px-6 py-2">
+          <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
             Users
           </Button>
         </Link>
@@ -71,7 +71,7 @@ export default function Users() {
           </Button>
         </Link>
         <Link href="/admin/management/organizationMember">
-          <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
+          <Button className="bg-red-600 text-white hover:bg-red-700 px-6 py-2">
             Organization member
           </Button>
         </Link>
@@ -85,11 +85,11 @@ export default function Users() {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Username</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Password</TableHead>
-                  <TableHead>Profile_Picture_URL</TableHead>
-                  <TableHead>Role</TableHead>
+                  <TableHead>Permission</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Collaborator</TableHead>
+                  <TableHead>Created At</TableHead>
+                  <TableHead>Solved At</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
