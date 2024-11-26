@@ -16,19 +16,24 @@ export default function DevNavBar({ session }: { session: Session | null }) {
     <div className="flex flex-col">
       <div className="flex gap-40 pt-3 mb-5">
         <div className="font-inria font-normal text-5xl pl-11 [text-shadow:_0_2px_4px_rgb(0_0_0_/_0.3)]">
-          <Link href={"/home"}>ManagINg</Link>
+          <Link href={"/dev/home"}>ManagINg</Link>
         </div>
         <NavigationMenu className="pt-2 pl-12">
           <NavigationMenuList>
             <NavigationMenuItem>
-              <Link href="/dev/apiUsage" legacyBehavior passHref>
+              <Link href="/dev/apiUsages" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  API Uasge
+                  API Usages
+                </NavigationMenuLink>
+              </Link>
+              <Link href="/dev/apiLogs" legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  API Logs
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/dev/inboxDev" legacyBehavior passHref>
+              <Link href="/dev/inbox" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Inbox
                 </NavigationMenuLink>
