@@ -120,7 +120,7 @@ export default function MyInventory() {
             <TableRow>
               <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Colab Users</TableHead>
+              <TableHead>Owner</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Last Edit Time</TableHead>
               <TableHead>Last Edit By</TableHead>
@@ -130,7 +130,7 @@ export default function MyInventory() {
 
           <TableBody>
             {filteredData.length > 0 ? (
-              filteredData.map((personalInventory) => (
+              filteredData.map((personalInventory, index) => (
                 <TableRow
                   key={personalInventory.ID}
                   className={`cursor-pointer hover:bg-gray-100 ${
@@ -142,20 +142,12 @@ export default function MyInventory() {
                     router.push(`/myInventory/${personalInventory.ID}`)
                   }
                 >
-                  <TableCell>{personalInventory.ID}</TableCell>
+                  <TableCell>{index + 1}</TableCell> {/* Auto-incremented ID */}
                   <TableCell>{personalInventory.Name}</TableCell>
                   <TableCell>
-                    {personalInventory.Collaborator_Username.length !== 0 ? (
-                      <>
-                        {personalInventory.Collaborator_Username.map(
-                          (collaborator, index) => (
-                            <div key={index}>{collaborator}</div>
-                          )
-                        )}
-                      </>
-                    ) : (
-                      <div>-</div>
-                    )}
+                    {personalInventory.Owner_ID !== session?.user.id
+                      ? personalInventory.Owner_Username
+                      : "ME"}
                   </TableCell>
                   <TableCell>{personalInventory.Description}</TableCell>
                   <TableCell>
