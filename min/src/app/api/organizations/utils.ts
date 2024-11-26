@@ -1,4 +1,5 @@
 import { queryDatabase } from "@/app/utils/db";
+import { OrganizationInterface } from "@/app/zods/db/organization";
 import { OrganizationMemberInterface } from "@/app/zods/db/organizationMember";
 
 export async function isMemberOfOrganization(
@@ -69,4 +70,24 @@ export async function MemberIDOrganization(
   const ID = result[0].ID;
 
   return ID;
+}
+
+export async function GetOrganizationName(organizationID: string) {
+  const sql = `
+        SELECT Name FROM Organization
+        WHERE Organization_Code = ?
+      `;
+  const result = await queryDatabase<OrganizationInterface["full"]>(sql, [
+    organizationID,
+  ]);
+
+  if (!Array.isArray(result)) {
+    throw new Error(
+      "Unexpected query result: Expected an array, but got a ResultSetHeader."
+    );
+  }
+
+  const Name = result[0].Name;
+
+  return Name;
 }

@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { fetchWithLogging } from "@/app/utils/log";
 import { GroupInventoryInterface } from "@/app/zods/db/groupInventory";
 import { MemberIDOrganization } from "@/app/api/organizations/utils";
+import { OrganizationInterface } from "@/app/zods/db/organization";
 
 export default function GroupInventory({
   params,
@@ -28,6 +29,7 @@ export default function GroupInventory({
   const { data: session, status } = useSession();
   const userID = session?.user.id;
   const router = useRouter();
+  const [groupName, setGroupName] = useState<string>("Group");
   const [groupInventories, setGroupInventories] = useState<
     GroupInventoryInterface["full"][]
   >([]);
@@ -46,7 +48,14 @@ export default function GroupInventory({
           { method: "GET" },
           session.user.id
         );
-        setGroupInventories(groupInventoryData);
+        const getGroupData = await fetchWithLogging<
+          OrganizationInterface["full"][]
+        >(
+          `/api/organizations/${params.groupID}`,
+          { method: "GET" },
+          session.user.id
+        );
+        setGroupName(getGroupData[0].Name);
         setLoading(false);
       } catch (error) {
         if (error instanceof Error) {
@@ -99,7 +108,9 @@ export default function GroupInventory({
 
   return (
     <div className="container mx-auto py-10 px-4">
-      <div className="font-inria font-normal mb-4 text-5xl">My Inventory</div>
+      <div className="font-inria font-normal mb-4 text-5xl">
+        {groupName} Inventory
+      </div>
       <div className="rounded-md border shadow-sm bg-white">
         <div className="flex items-center py-4 px-6">
           {/* Search Box */}
@@ -125,7 +136,6 @@ export default function GroupInventory({
             <TableRow>
               <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Colab Users</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Last Edit Time</TableHead>
               <TableHead>Last Edit By</TableHead>
