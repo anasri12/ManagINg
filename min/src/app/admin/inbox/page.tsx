@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ReportInterface } from "@/app/zods/db/report";
 import { useSession } from "next-auth/react";
+import Loading from "@/components/general/Loading";
 
 interface Message {
   id: number;
@@ -131,11 +132,11 @@ export default function AdminInbox() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   return (
-    <div className="container mx-28 py-6 px-6 overflow-y-auto max-h-screen">
+    <div className="container mx-28 py-6 px-6 overflow-y-auto">
       {/* Header */}
       <div className="font-inria text-5xl mb-8">Admin Inbox</div>
 

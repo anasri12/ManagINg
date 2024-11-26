@@ -125,6 +125,11 @@ export default function Users() {
             Collaborations
           </Button>
         </Link>
+        <Link href="/admin/management/inventories">
+          <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
+            Inventories
+          </Button>
+        </Link>
       </div>
 
       {/* Table */}

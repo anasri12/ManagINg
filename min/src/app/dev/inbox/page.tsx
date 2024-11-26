@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 import { ContactInterface } from "@/app/zods/db/contact";
+import Loading from "@/components/general/Loading";
 
 interface Message {
   id: number;
@@ -130,11 +131,11 @@ export default function DevInbox() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   return (
-    <div className="container mx-28 py-6 px-6">
+    <div className="container mx-28 py-6 px-6 overflow-y-auto">
       {/* Header */}
       <div className="font-inria text-5xl mb-8">Dev Inbox</div>
 

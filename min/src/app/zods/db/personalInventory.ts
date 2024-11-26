@@ -46,16 +46,15 @@ const FullPersonalInventorySchema = z.object({
   Name: z.string(),
   Description: z.string().nullable(),
   Owner_ID: z.string(),
-  Owner_Username: z.string(),
+  Owner_Username: z.string().optional(),
   CreatedAt: z.date(),
   UpdatedAt: z.date(),
   Input_Enable: InputEnableSchema,
-  Collaboration_ID: z.array(z.string()),
-  Collaborator_Number: z.number(),
-  Collaborator_Username: z.array(z.string()),
+  Collaboration_ID: z.array(z.string()).optional(),
+  Collaborator_Username: z.array(z.string()).optional(),
   Collaborator_Permission: z.array(z.enum(["View", "Edit"])),
   UpdatedBy: z.string(),
-  UpdatedBy_Username: z.string(),
+  UpdatedBy_Username: z.string().optional(),
 });
 
 const PostPersonalInventorySchema = z.object({

@@ -12,6 +12,7 @@ import {
   Legend,
 } from "chart.js";
 import { LogInterface } from "@/app/zods/db/log";
+import Loading from "@/components/general/Loading";
 
 ChartJS.register(
   CategoryScale,
@@ -74,7 +75,7 @@ export default function APIStatisticsBarChart() {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   // Prepare data for Top Usage Bar Chart

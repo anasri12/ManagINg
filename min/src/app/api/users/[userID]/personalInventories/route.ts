@@ -111,7 +111,7 @@ export async function GET(
       LEFT JOIN User collaborator ON c.Collaborator_ID = collaborator.ID
       LEFT JOIN User updatedBy ON pi.UpdatedBy = updatedBy.ID
       ${whereClause}
-      GROUP BY pi.ID, owner.Username, updatedBy.Username
+      GROUP BY pi.ID, owner.Username, updatedBy.Username ORDER BY pi.UpdatedAt DESC
     `;
 
     console.log("SQL Query:", sql);

@@ -9,28 +9,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserInterface } from "@/app/zods/db/user";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { CollaborationInterface } from "@/app/zods/db/collaboration";
 import { format } from "date-fns";
 import Loading from "@/components/general/Loading";
+import { PersonalInventoryInterface } from "@/app/zods/db/personalInventory";
 
-export default function Collaborations() {
+export default function Inventories() {
   const { data: session, status } = useSession();
   const userID = session?.user.id;
   const [collaborations, setCollaborations] = useState<
-    CollaborationInterface["full"][]
+    PersonalInventoryInterface["full"][]
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         if (!userID) return;
-        const response = await fetch(`/api/collaborations`);
+        const response = await fetch(`/api/personalInventories`);
         if (!response.ok) {
           throw new Error(`Error: ${response.statusText}`);
         }
@@ -49,6 +52,7 @@ export default function Collaborations() {
 
     fetchData();
   }, [session]);
+
   if (loading) {
     return <Loading />;
   }
@@ -56,6 +60,24 @@ export default function Collaborations() {
   if (error) {
     return <div>Error: {error}</div>;
   }
+
+  // Pagination logic
+  const totalPages = Math.ceil(collaborations.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = collaborations.slice(startIndex, endIndex);
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   return (
     <div className="container mx-28 py-6 px-6">
@@ -70,18 +92,18 @@ export default function Collaborations() {
           </Button>
         </Link>
         <Link href="/admin/management/collaborations">
-          <Button className="bg-red-600 text-white hover:bg-red-700 px-6 py-2">
+          <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
             Collaborations
           </Button>
         </Link>
         <Link href="/admin/management/inventories">
-          <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
+          <Button className="bg-red-600 text-white hover:bg-red-700 px-6 py-2">
             Inventories
           </Button>
         </Link>
       </div>
 
-      {/* table */}
+      {/* Table */}
       <div className="rounded-md border shadow-sm bg-white">
         <div className="flex items-center py-4 px-6">
           <>
@@ -89,30 +111,32 @@ export default function Collaborations() {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Username</TableHead>
-                  <TableHead>Inventory Name</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Owner_ID</TableHead>
                   <TableHead>Created At</TableHead>
-                  <TableHead>Resolved At</TableHead>
+                  <TableHead>Updated At</TableHead>
+                  <TableHead>Updated By</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {collaborations.map((collaboration) => (
+                {currentItems.map((collaboration) => (
                   <TableRow key={collaboration.ID}>
                     <TableCell>{collaboration.ID}</TableCell>
-                    <TableCell>{collaboration.Collaborator_Username}</TableCell>
-                    <TableCell>{collaboration.Inventory_Name}</TableCell>
-                    <TableCell>{collaboration.Status}</TableCell>
+                    <TableCell>{collaboration.Name}</TableCell>
+                    <TableCell>{collaboration.Description}</TableCell>
+                    <TableCell>{collaboration.Owner_ID}</TableCell>
                     <TableCell>
                       {collaboration.CreatedAt
                         ? format(collaboration.CreatedAt, "PPP p")
                         : "-"}
                     </TableCell>
                     <TableCell>
-                      {collaboration.ResolvedAt
-                        ? format(collaboration.ResolvedAt, "PPP p")
+                      {collaboration.UpdatedAt
+                        ? format(collaboration.UpdatedAt, "PPP p")
                         : "-"}
                     </TableCell>
+                    <TableCell>{collaboration.UpdatedBy}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -125,6 +149,27 @@ export default function Collaborations() {
               </TableFooter>
             </Table>
           </>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="flex justify-between items-center py-4 px-6">
+          <Button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className="bg-gray-200 text-black hover:bg-gray-300 px-4 py-2"
+          >
+            Previous
+          </Button>
+          <div>
+            Page {currentPage} of {totalPages}
+          </div>
+          <Button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="bg-gray-200 text-black hover:bg-gray-300 px-4 py-2"
+          >
+            Next
+          </Button>
         </div>
       </div>
     </div>
