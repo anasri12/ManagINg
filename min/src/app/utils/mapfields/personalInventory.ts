@@ -9,7 +9,17 @@ export const PersonalInventoryFields = [
   "Input_Enable",
   "Collaborator_Username",
   "Collaborator_Permission",
-  "Collaborator_Number",
   "UpdatedBy",
   "UpdatedBy_Username",
+];
+
+export const AdminPersonalInventoryFields = [
+  "ID",
+  "Name",
+  "Description",
+  "Owner_ID",
+  "CreatedAt",
+  "UpdatedAt",
+  "Input_Enable",
+  "UpdatedBy",
 ];

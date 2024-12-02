@@ -25,7 +25,7 @@ export default function UserNavBar({ session }: { session: Session | null }) {
             <RenderUserState />
             {session && session.user.role === "Admin" ? (
               <NavigationMenuItem>
-                <Link href="/admin" legacyBehavior passHref>
+                <Link href="/admin/home" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Admin Mode
                   </NavigationMenuLink>
@@ -33,7 +33,7 @@ export default function UserNavBar({ session }: { session: Session | null }) {
               </NavigationMenuItem>
             ) : session && session?.user.role === "Developer" ? (
               <NavigationMenuItem>
-                <Link href="/dev" legacyBehavior passHref>
+                <Link href="/dev/home" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Dev Mode
                   </NavigationMenuLink>

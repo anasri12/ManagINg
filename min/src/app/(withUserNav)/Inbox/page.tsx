@@ -101,7 +101,7 @@ export default function Inbox() {
         <Button className="bg-red-600 text-white hover:bg-red-700 px-6 py-2">
           Notification
         </Button>
-        <Link href="/inbox/contactAdmin">
+        <Link href="/inbox/report">
           <Button className="bg-gray-200 text-black hover:bg-gray-300 px-6 py-2">
             Contact Admin
           </Button>

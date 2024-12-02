@@ -1,17 +1,17 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Loading from "@/components/general/Loading";
-import { fetchWithLogging } from "@/app/utils/log";
 
 export default function SignupPage() {
   const { data: session, status } = useSession();
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [cpassword, setCPassword] = useState<string>(""); // Stores confirm password
-  const [error, setError] = useState<string | null>(null);
+  const [cpassword, setCPassword] = useState<string>(""); // Confirm password
+  const [errorMessages, setErrorMessages] = useState<string[]>([]); // Store error messages
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const router = useRouter();
 
@@ -27,19 +27,32 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setErrorMessages([]);
     setIsSubmitting(true);
 
-    const response = await fetchWithLogging(
-      "/api/users",
-      {
-        method: "POST",
-        body: { username, email, password, cpassword },
+    const response = await fetch("/api/users", {
+      method: "POST",
+      body: JSON.stringify({ username, email, password, cpassword }),
+      headers: {
+        "Content-Type": "application/json",
       },
-      "guest"
-    );
-    console.log(response);
-    router.push("/signin");
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      router.push("/signin");
+    } else {
+      if (data.errors && Array.isArray(data.errors)) {
+        // Extract and display specific error messages from Zod validation
+        setErrorMessages(
+          data.errors.map((err: { message: string }) => err.message)
+        );
+      } else {
+        setErrorMessages([data.error || "Failed to create account"]);
+      }
+    }
+
     setIsSubmitting(false);
   };
 
@@ -51,7 +64,13 @@ export default function SignupPage() {
           className="p-6 border rounded-md shadow-md max-w-md w-full"
         >
           <h1 className="text-2xl font-bold mb-4">Sign Up</h1>
-          {error && <div className="text-red-500 mb-4">{error}</div>}
+          {errorMessages.length > 0 && (
+            <div className="text-red-500 mb-4">
+              {errorMessages.map((error, index) => (
+                <div key={index}>{error}</div>
+              ))}
+            </div>
+          )}
           <div className="mb-4">
             <label className="block text-gray-700">Username</label>
             <input
@@ -88,8 +107,7 @@ export default function SignupPage() {
               Confirm Password
             </label>
             <input
-              id="cpassword"
-              type="cpassword"
+              type="password"
               value={cpassword}
               onChange={(e) => setCPassword(e.target.value)}
               className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-700"

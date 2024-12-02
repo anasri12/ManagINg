@@ -63,7 +63,7 @@ export default function EditInventory({
 
         const collaborators =
           data.Collaborator_Username?.map((username, index) => ({
-            collaborationID: data.Collaboration_ID[index],
+            collaborationID: data.Collaboration_ID![index],
             username,
             permission: data.Collaborator_Permission[index] || "View",
           })) || [];

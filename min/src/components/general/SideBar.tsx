@@ -11,39 +11,14 @@ import Image from "next/image";
 import SignOutButton from "./SignOutButton";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { OrganizationWithMemberInterface } from "@/app/zods/db/subquery/organizationWithMember";
 
 export default function SideBar({
   session,
-  groupName,
   state,
 }: {
   session: Session;
-  groupName?: string;
   state?: "dev" | "admin";
 }) {
-  const userID = session?.user.id;
-  const [groups, setGroups] = useState<OrganizationWithMemberInterface[]>([]);
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        if (session) {
-          const response = await fetch(
-            `/api/users/${session.user.id}/organizations?fields=Code,Name`
-          );
-          if (!response.ok) {
-            throw new Error(`Error: ${response.statusText}`);
-          }
-          const data = await response.json();
-          setGroups(data);
-        }
-      } catch (err: unknown) {
-        console.log(err);
-      }
-    };
-
-    fetchGroups();
-  }, [session, userID]);
   return (
     <Sheet>
       <SheetTrigger>
@@ -65,11 +40,7 @@ export default function SideBar({
               <div className="w-36 justify-start flex">
                 {session.user?.name || "User"}
               </div>
-              {groupName ? (
-                <div className="w-36 justify-start flex text-blue-500 text-sm">
-                  {groupName}
-                </div>
-              ) : state === "admin" ? (
+              {state === "admin" ? (
                 <div className="w-36 justify-start flex text-red-500 text-sm">
                   Admin
                 </div>
@@ -93,36 +64,6 @@ export default function SideBar({
         <div className="mt-3 flex flex-col">
           <Link href={"/profile"} className="mb-2">
             Profile
-          </Link>
-          {groupName ? (
-            <Link href={"/home"} className="mb-2">
-              Personal
-            </Link>
-          ) : (
-            <></>
-          )}
-          {groups.length !== 0 ? (
-            <>
-              <div className="mb-1">Group</div>
-              <div className="w-auto h-px bg-[#a9a9a9] border-1 rounded-md mb-1"></div>
-              <ul className="mb-2 pl-5">
-                {groups.map((group) => (
-                  <Link
-                    href={`/group/${group.Code}`}
-                    key={group.Code}
-                    className="mb-2"
-                  >
-                    {group.Name}
-                  </Link>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <></>
-          )}
-
-          <Link href={"/newGroup"} className="mb-2">
-            Add/Create Group
           </Link>
           <SignOutButton />
         </div>

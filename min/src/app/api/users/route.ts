@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-    const sql = `SELECT ${selectClause} FROM User ${whereClause}`;
+    const sql = `SELECT ${selectClause} FROM User ${whereClause} ORDER By CreatedAt ASC`;
 
     console.log("SQL Query:", sql);
     console.log("Query Params:", params);
@@ -122,11 +122,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
+    console.log(body);
     const parsedData = UserSchema["post"].parse(body);
-
-    const { Username, Email, Password } = parsedData;
-    const userId = await registerUser(Username, Email, Password, null);
+    const { username, email, password } = parsedData;
+    const userId = await registerUser(username, email, password, null);
 
     return NextResponse.json(
       { message: "User created successfully", userId },
